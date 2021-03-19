@@ -22,6 +22,8 @@ class PostLNEncoderLayer(nn.Module):
         self.post_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
         self.post_ffn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
+        self.merge_matrix = nn.Linear(d_model, d_model)
+
     def forward(
             self,
             hidden,
@@ -39,6 +41,7 @@ class PostLNEncoderLayer(nn.Module):
         if get_attention_scores:
             attn_scores = block_state[1]
         block_state = block_state[0]
+        block_state = self.merge_matrix(block_state)
         block_state = block_state + hidden
         block_state = self.post_attn_ln(block_state)
 

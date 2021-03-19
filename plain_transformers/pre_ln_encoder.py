@@ -51,7 +51,7 @@ class PreLNEncoderLayer(nn.Module):
             output = output + (attn_scores, )
         return output
 
-
+# TODO: think about merge matrix for attention
 class PreLNTransformerEncoder(nn.Module):
     def __init__(
             self,
