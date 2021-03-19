@@ -19,7 +19,7 @@ class PostLNEncoderLayer(nn.Module):
         self.self_attention = MultiHeadAttention(d_model, n_heads, dropout)
         self.dropout = nn.Dropout(dropout)
         self.ffn = FFN(d_model, dim_feedforward, dropout, activation_name=activation_name)
-        self.post_attn_ln = nn.LayerNorm(d_model,eps=ln_eps)
+        self.post_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
         self.post_ffn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
     def forward(
