@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from common_layers import FFN, MultiHeadAttention, TransformerEmbedding, TransformerEncoder
 
 
-class PreLNEncoderLayer(nn.Module):
+class PostLNEncoderLayer(nn.Module):
     def __init__(
             self,
             d_model=512,
@@ -13,12 +13,12 @@ class PreLNEncoderLayer(nn.Module):
             dim_feedforward=2048,
             dropout=0.1
         ):
-        super(PreLNEncoderLayer, self).__init__()
+        super(PostLNEncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(d_model, n_heads, dropout)
         self.dropout = nn.Dropout(dropout)
         self.ffn = FFN(d_model, dim_feedforward, dropout)
-        self.pre_attn_ln = nn.LayerNorm(d_model)
-        self.pre_ffn_ln = nn.LayerNorm(d_model)
+        self.post_attn_ln = nn.LayerNorm(d_model)
+        self.post_ffn_ln = nn.LayerNorm(d_model)
 
     def forward(
             self,
@@ -27,11 +27,10 @@ class PreLNEncoderLayer(nn.Module):
             get_attention_scores=False
         ):
         attn_scores = None
-        block_state = self.pre_attn_ln(hidden)
         block_state = self.self_attention(
-            query=block_state,
-            key=block_state,
-            value=block_state,
+            query=hidden,
+            key=hidden,
+            value=hidden,
             attention_mask=attention_mask,
             get_attention_scores=get_attention_scores
         )
@@ -39,10 +38,11 @@ class PreLNEncoderLayer(nn.Module):
             attn_scores = block_state[1]
         block_state = block_state[0]
         block_state = block_state + hidden
+        block_state = self.post_attn_ln(block_state)
 
-        ffn_block_state = self.pre_ffn_ln(block_state)
-        ffn_block_state = self.ffn(ffn_block_state)
+        ffn_block_state = self.ffn(block_state)
         ffn_block_state = ffn_block_state + block_state
+        ffn_block_state = self.post_ffn_ln(ffn_block_state)
 
         output = (ffn_block_state, )
         if get_attention_scores:
@@ -50,7 +50,7 @@ class PreLNEncoderLayer(nn.Module):
         return output
 
 
-class PreLNTransformerEncoder(nn.Module):
+class PostLNTransformerEncoder(nn.Module):
     def __init__(
             self,
             d_model,
@@ -65,7 +65,7 @@ class PreLNTransformerEncoder(nn.Module):
             use_layer_norm=False,
             pos_embedding_type='embedding'
         ):
-        super(PreLNTransformerEncoder, self).__init__()
+        super(PostLNTransformerEncoder, self).__init__()
         self.embedding = TransformerEmbedding(
             vocab_size=vocab_size,
             d_model=d_model,
@@ -78,14 +78,12 @@ class PreLNTransformerEncoder(nn.Module):
         )
         self.encoder = TransformerEncoder(
             num_layers=num_layers,
-            encoder_class=PreLNEncoderLayer,
+            encoder_class=PostLNEncoderLayer,
             d_model=d_model,
             n_heads=n_heads,
             dim_feedforward=dim_feedforward,
             dropout=dropout
         )
-
-        self.post_encoder_ln = nn.LayerNorm(d_model)
 
     def create_attention_mask(self, attention_mask, input_shape, device):
         # [batch_size, seq_len] -> [batch_size, 1, 1, seq_len]
@@ -114,8 +112,4 @@ class PreLNTransformerEncoder(nn.Module):
             attention_mask=attention_mask,
             get_attention_scores=get_attention_scores
         )
-        hidden_ln = self.post_encoder_ln(hidden[0])
-        output = (hidden_ln, )
-        if get_attention_scores:
-            output = output + (hidden[1], )
-        return output
+        return hidden

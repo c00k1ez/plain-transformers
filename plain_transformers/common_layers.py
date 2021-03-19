@@ -135,3 +135,39 @@ class TransformerEmbedding(nn.Module):
         
         token_emb = self.dropout(token_emb)
         return token_emb
+
+
+class TransformerEncoder(nn.Module):
+    def __init__(
+            self,
+            num_layers,
+            encoder_class,
+            **kwargs
+        ):
+        super(TransformerEncoder, self).__init__()
+        self.encoder_layers = nn.ModuleList([
+            encoder_class(**kwargs) for _ in range(num_layers)
+        ])
+
+    def forward(
+            self,
+            hidden,
+            attention_mask=None,
+            get_attention_scores=False
+        ):
+        attn_scores = []
+        for layer in self.encoder_layers:
+            hidden = layer(
+                hidden,
+                attention_mask=attention_mask,
+                get_attention_scores=get_attention_scores
+            )
+            if get_attention_scores:
+                attn_scores.append(hidden[1])
+            hidden = hidden[0]
+        output = (hidden, )
+        if get_attention_scores:
+            attn_scores = torch.stack(attn_scores, dim=-1)
+            output = output + (attn_scores, )
+        return output
+
