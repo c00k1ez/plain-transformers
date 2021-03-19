@@ -111,7 +111,8 @@ class TransformerEmbedding(nn.Module):
             token_type_vocab_size,
             pos_embedding_type='embedding',
             dropout=0.1,
-            use_layer_norm=False
+            use_layer_norm=False,
+            ln_eps=1e-12
         ):
         super(TransformerEmbedding, self).__init__()
         assert pos_embedding_type in ['embedding', 'timing']
@@ -123,7 +124,7 @@ class TransformerEmbedding(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.register_buffer("pos_ids", torch.arange(max_length).expand((1, -1)))
 
-        self.layer_norm = nn.LayerNorm(d_model)
+        self.layer_norm = nn.LayerNorm(d_model, eps=ln_eps)
 
         self.use_layer_norm = use_layer_norm
 

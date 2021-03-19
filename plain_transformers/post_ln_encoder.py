@@ -78,7 +78,8 @@ class PostLNTransformerEncoder(nn.Module):
             token_type_vocab_size=token_type_vocab_size,
             pos_embedding_type=pos_embedding_type,
             dropout=dropout,
-            use_layer_norm=use_layer_norm
+            use_layer_norm=use_layer_norm,
+            ln_eps=ln_eps
         )
         self.encoder = TransformerEncoder(
             num_layers=num_layers,
