@@ -135,12 +135,12 @@ class PreLNTransformerEncoder(nn.Module):
             token_type_ids=None,
             get_attention_scores=False
         ):
-        if attention_mask is None:
-            attention_mask = self.create_attention_mask(
-                attention_mask,
-                input_ids.shape[:1],
-                input_ids.device
-            )
+
+        attention_mask = self.create_attention_mask(
+            attention_mask,
+            input_ids.shape,
+            input_ids.device
+        )
         embeddings = self.embedding(input_ids, token_type_ids)
         hidden = self.encoder(
             embeddings,

@@ -69,9 +69,9 @@ class MultiHeadAttention(nn.Module):
         key_proj = self.key_projection(key)
         value_proj = self.value_projection(value)
 
-        query_proj = self.transpose_for_scores(query_proj)
-        key_proj = self.transpose_for_scores(key_proj)
-        value_proj = self.transpose_for_scores(value_proj)
+        query_proj = self.transpose_to_heads(query_proj)
+        key_proj = self.transpose_to_heads(key_proj)
+        value_proj = self.transpose_to_heads(value_proj)
 
         raw_scores = torch.matmul(query_proj, key_proj.transpose(-1, -2))
 
@@ -119,12 +119,12 @@ class TransformerEmbedding(nn.Module):
             input_ids,
             token_type_ids=None
         ):
-        input_shape = input_ids.shape
         token_emb = self.token_embedding(input_ids)
+        input_shape = token_emb.shape
         if token_type_ids is not None:
             token_emb = token_emb + self.token_type_embedding(token_type_ids)
         else:
-            token_emb = token_emb + torch.zeros(input_shape, dtype=torch.long, device=self.pos_ids.device)
+            token_emb = torch.zeros(input_shape, dtype=torch.long, device=self.pos_ids.device)
         
         pos_ids = self.pos_ids[:, :input_shape[1]]
 
