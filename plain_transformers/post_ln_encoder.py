@@ -11,12 +11,13 @@ class PostLNEncoderLayer(nn.Module):
             d_model=512,
             n_heads=8,
             dim_feedforward=2048,
-            dropout=0.1
+            dropout=0.1,
+            activation_name="gelu"
         ):
         super(PostLNEncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(d_model, n_heads, dropout)
         self.dropout = nn.Dropout(dropout)
-        self.ffn = FFN(d_model, dim_feedforward, dropout)
+        self.ffn = FFN(d_model, dim_feedforward, dropout, activation_name=activation_name)
         self.post_attn_ln = nn.LayerNorm(d_model)
         self.post_ffn_ln = nn.LayerNorm(d_model)
 
@@ -63,7 +64,8 @@ class PostLNTransformerEncoder(nn.Module):
             dim_feedforward,
             num_layers,
             use_layer_norm=False,
-            pos_embedding_type='embedding'
+            pos_embedding_type='embedding',
+            activation_name="gelu"
         ):
         super(PostLNTransformerEncoder, self).__init__()
         self.embedding = TransformerEmbedding(
@@ -82,7 +84,8 @@ class PostLNTransformerEncoder(nn.Module):
             d_model=d_model,
             n_heads=n_heads,
             dim_feedforward=dim_feedforward,
-            dropout=dropout
+            dropout=dropout,
+            activation_name=activation_name
         )
 
     def create_attention_mask(self, attention_mask, input_shape, device):

@@ -3,15 +3,28 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def act_to_func(act_name):
+    acts = {
+        "gelu": F.gelu,
+        "relu": F.relu
+    }
+    if act_name in acts:
+        return acts[act_name]
+    else:
+        return F.relu
+
+
 class FFN(nn.Module):
     def __init__(
             self,
             d_model=512,
             dim_feedforward=2048,
-            dropout=0.1
+            dropout=0.1,
+            activation_name="gelu"
         ):
         super(FFN, self).__init__()   
         self.d_model = d_model
+        self.activation_name = activation_name
         self.dim_feedforward = dim_feedforward
         self.layer_inc = nn.Linear(d_model, dim_feedforward)
         self.layer_reduce = nn.Linear(dim_feedforward, d_model)
@@ -19,7 +32,7 @@ class FFN(nn.Module):
    
     def forward(self, hidden):
         hid_state = self.layer_inc(hidden)
-        hid_state = self.dropout(F.relu(hid_state))
+        hid_state = self.dropout(act_to_func(self.activation_name)(hid_state))
         return self.layer_reduce(hid_state)
 
 
