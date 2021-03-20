@@ -138,7 +138,7 @@ class TransformerEmbedding(nn.Module):
         if token_type_ids is not None:
             token_emb = token_emb + self.token_type_embedding(token_type_ids)
         else:
-            token_emb = torch.zeros(input_shape, dtype=torch.long, device=self.pos_ids.device)
+            token_emb = token_emb + torch.zeros(input_shape, dtype=torch.long, device=self.pos_ids.device)
         
         pos_ids = self.pos_ids[:, :input_shape[1]]
 
