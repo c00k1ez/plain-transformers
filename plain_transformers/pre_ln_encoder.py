@@ -65,7 +65,7 @@ class PreLNTransformerEncoder(nn.Module):
             n_heads,
             dim_feedforward,
             num_layers,
-            use_layer_norm=False,
+            use_embedding_layer_norm=False,
             pos_embedding_type='embedding',
             activation_name="gelu",
             ln_eps=1e-12
@@ -79,7 +79,7 @@ class PreLNTransformerEncoder(nn.Module):
             token_type_vocab_size=token_type_vocab_size,
             pos_embedding_type=pos_embedding_type,
             dropout=dropout,
-            use_layer_norm=use_layer_norm,
+            use_layer_norm=use_embedding_layer_norm,
             ln_eps=ln_eps
         )
         self.encoder = TransformerEncoder(
