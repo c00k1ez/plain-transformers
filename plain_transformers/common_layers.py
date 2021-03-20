@@ -61,7 +61,7 @@ class MultiHeadAttention(nn.Module):
         self.value_projection = nn.Linear(self.value_input_dim, d_model)
         self.dropout = nn.Dropout(dropout)
 
-    def transpose_to_heads(self, x):
+    def _transpose_to_heads(self, x):
         # (batch_size, seq_len, emb_dim) -> (batch_size, seq_len, n_heads, hidden_per_head)
         new_shape = x.size()[:-1] + (self.n_heads, self.hidden_per_head)
         x = x.view(*new_shape)
@@ -69,22 +69,25 @@ class MultiHeadAttention(nn.Module):
         # -> (batch_size, n_heads, seq_len, hidden_per_head)
         return x.permute(0, 2, 1, 3)
 
+    def _generate_decoder_self_attn_mask(self):
+        pass
+
     def forward(
             self,
             query,
             key,
             value,
             attention_mask=None,
-            use_decoder_mask=False,
+            use_decoder_self_attn_mask=False,
             get_attention_scores=False
         ):
         query_proj = self.query_projection(query)
         key_proj = self.key_projection(key)
         value_proj = self.value_projection(value)
 
-        query_proj = self.transpose_to_heads(query_proj)
-        key_proj = self.transpose_to_heads(key_proj)
-        value_proj = self.transpose_to_heads(value_proj)
+        query_proj = self._transpose_to_heads(query_proj)
+        key_proj = self._transpose_to_heads(key_proj)
+        value_proj = self._transpose_to_heads(value_proj)
 
         raw_scores = torch.matmul(query_proj, key_proj.transpose(-1, -2))
 
@@ -135,10 +138,9 @@ class TransformerEmbedding(nn.Module):
         ):
         token_emb = self.token_embedding(input_ids)
         input_shape = token_emb.shape
-        if token_type_ids is not None:
-            token_emb = token_emb + self.token_type_embedding(token_type_ids)
-        else:
-            token_emb = token_emb + torch.zeros(input_shape, dtype=torch.long, device=self.pos_ids.device)
+        if token_type_ids is None:
+            token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=self.pos_ids.device)
+        token_emb = token_emb + self.token_type_embedding(token_type_ids)
         
         pos_ids = self.pos_ids[:, :input_shape[1]]
 
