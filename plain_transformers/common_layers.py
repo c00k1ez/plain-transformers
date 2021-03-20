@@ -44,7 +44,8 @@ class MultiHeadAttention(nn.Module):
             dropout=0.1,
             query_input_dim=None,
             key_input_dim=None,
-            value_input_dim=None
+            value_input_dim=None,
+            context_len=None
         ):
         super(MultiHeadAttention, self).__init__()
         assert d_model % n_heads == 0
@@ -61,6 +62,22 @@ class MultiHeadAttention(nn.Module):
         self.value_projection = nn.Linear(self.value_input_dim, d_model)
         self.dropout = nn.Dropout(dropout)
 
+        # attn_type in ["encoder", "decoder", "cross"]
+        self.attn_type = "encoder"
+
+        self.register_buffer("masked_val", torch.FloatTensor([-1e4]))
+        if context_len is not None:
+            self.attn_type = "decoder"
+            self.register_buffer(
+                "tri_mask", torch.tril(
+                    torch.ones((context_len, context_len), dtype=torch.uint8)
+                ).view(1, 1, context_len, context_len)
+            )
+        else:
+            self.register_buffer(
+                "tri_mask", None
+            )
+
     def _transpose_to_heads(self, x):
         # (batch_size, seq_len, emb_dim) -> (batch_size, seq_len, n_heads, hidden_per_head)
         new_shape = x.size()[:-1] + (self.n_heads, self.hidden_per_head)
@@ -69,8 +86,10 @@ class MultiHeadAttention(nn.Module):
         # -> (batch_size, n_heads, seq_len, hidden_per_head)
         return x.permute(0, 2, 1, 3)
 
-    def _generate_decoder_self_attn_mask(self):
-        pass
+    def _generate_decoder_self_attn_mask(self, q_seq_len, k_seq_len):
+        # TODO: fix case then k_seq_len > q_seq_len
+        attn_mask = self.tri_mask[:, :, k_seq_len - q_seq_len : k_seq_len, : k_seq_len]
+        return attn_mask
 
     def forward(
             self,
@@ -78,7 +97,6 @@ class MultiHeadAttention(nn.Module):
             key,
             value,
             attention_mask=None,
-            use_decoder_self_attn_mask=False,
             get_attention_scores=False
         ):
         query_proj = self.query_projection(query)
@@ -91,8 +109,12 @@ class MultiHeadAttention(nn.Module):
 
         raw_scores = torch.matmul(query_proj, key_proj.transpose(-1, -2))
 
+        if self.attn_type == "decoder":
+            decoder_attn_mask = self._generate_decoder_self_attn_mask(0, key_proj.shape[2])
+            torch.where(decoder_attn_mask.bool(), raw_scores, self.masked_val.to(raw_scores.dtype))
+
         if attention_mask is not None:
-            raw_scores = raw_scores + attention_mask       
+            raw_scores = raw_scores + attention_mask
         attn_scores = F.softmax(raw_scores / self.scale, dim=-1)
         attn = torch.matmul(attn_scores, value_proj)
         attn = attn.permute(0, 2, 1, 3).contiguous()
