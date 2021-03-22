@@ -4,19 +4,26 @@ import torch.nn.functional as F
 
 
 # TODO: add more flexible opportunity to init encoder & decoder
+# TODO: add label smoothing loss
 class Transformer(nn.Module):
     def __init__(
             self,
             encoder_class,
             decoder_class,
+            encoder_vocab_size,
+            decoder_vocab_size,
             use_token_type_embeddings=False,
             share_decoder_head_weights=True,
             share_encoder_decoder_embeddings=False,
             **kwargs
         ):
         super(Transformer, self).__init__()
-        self.encoder = encoder_class(**kwargs, use_token_type_embeddings=use_token_type_embeddings)
-        self.decoder = decoder_class(**kwargs)
+        self.encoder = encoder_class(
+            **kwargs,
+            use_token_type_embeddings=use_token_type_embeddings,
+            encoder_vocab_size=encoder_vocab_size
+        )
+        self.decoder = decoder_class(**kwargs, decoder_vocab_size=decoder_vocab_size)
         self.lm_head = nn.Linear(kwargs['d_model'], kwargs['vocab_size'], bias=False)
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
@@ -76,6 +83,6 @@ class Transformer(nn.Module):
             labels = torch.cat([
                 labels[:, 1:],
                 torch.LongTensor([[self.pad_token_id]], device=labels.device).repeat(batch_size, 1)
-            ])
+            ], dim=-1)
             output['loss_val'] = self.loss_function(raw_probs, labels)
         return output
