@@ -84,5 +84,5 @@ class Transformer(nn.Module):
                 labels[:, 1:],
                 torch.LongTensor([[self.pad_token_id]], device=labels.device).repeat(batch_size, 1)
             ], dim=-1)
-            output['loss_val'] = self.loss_function(raw_probs, labels)
+            output['loss_val'] = self.loss_function(raw_probs.permute(0, 2, 1), labels)
         return output
