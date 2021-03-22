@@ -118,7 +118,8 @@ class PostLNTransformerDecoder(nn.Module):
             dropout=dropout,
             use_layer_norm=use_embedding_layer_norm,
             use_token_type_embeddings=False,
-            ln_eps=ln_eps
+            ln_eps=ln_eps,
+            pos_embedding_type=pos_embedding_type
         )
 
         self.decoder = TransformerDecoder(
@@ -145,6 +146,13 @@ class PostLNTransformerDecoder(nn.Module):
             attention_mask=attention_mask,
             input_shape=input_ids.shape,
             device=input_ids.device
+        )
+
+        encoder_attention_mask = create_attention_mask(
+            attention_mask=encoder_attention_mask,
+            input_shape=input_ids.shape,
+            device=input_ids.device,
+            tgt_size=encoder_attention_mask.shape[-1]
         )
 
         embeddings = self.embedding(input_ids)
