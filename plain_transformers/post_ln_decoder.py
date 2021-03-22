@@ -150,9 +150,9 @@ class PostLNTransformerDecoder(nn.Module):
 
         encoder_attention_mask = create_attention_mask(
             attention_mask=encoder_attention_mask,
-            input_shape=encoder_hidden_state['key'].shape,
+            input_shape=encoder_hidden_state['key'].shape[:-1],
             device=encoder_hidden_state['key'].device,
-            tgt_size=input_ids.shape[-1]
+            src_size=input_ids.shape[-1]
         )
 
         embeddings = self.embedding(input_ids)
