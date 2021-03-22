@@ -111,7 +111,7 @@ class MultiHeadAttention(nn.Module):
         raw_scores = torch.matmul(query_proj, key_proj.transpose(-1, -2))
 
         if self.attn_type == "decoder":
-            decoder_attn_mask = self._generate_decoder_self_attn_mask(0, key_proj.shape[2])
+            decoder_attn_mask = self._generate_decoder_self_attn_mask(key_proj.shape[2], key_proj.shape[2])
             raw_scores = torch.where(
                 decoder_attn_mask.bool(),
                 raw_scores,
