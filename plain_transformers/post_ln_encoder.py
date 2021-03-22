@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from common_layers import FFN, MultiHeadAttention, TransformerEmbedding, TransformerEncoder
+from .common_layers import FFN, MultiHeadAttention, TransformerEmbedding, TransformerEncoder
+from .utils import create_attention_mask
 
 
 class PostLNEncoderLayer(nn.Module):
@@ -70,7 +71,8 @@ class PostLNTransformerEncoder(nn.Module):
             use_embedding_layer_norm=False,
             pos_embedding_type='embedding',
             activation_name="gelu",
-            ln_eps=1e-12
+            ln_eps=1e-12,
+            use_token_type_embeddings=True
         ):
         super(PostLNTransformerEncoder, self).__init__()
         self.embedding = TransformerEmbedding(
@@ -82,7 +84,8 @@ class PostLNTransformerEncoder(nn.Module):
             pos_embedding_type=pos_embedding_type,
             dropout=dropout,
             use_layer_norm=use_embedding_layer_norm,
-            ln_eps=ln_eps
+            ln_eps=ln_eps,
+            use_token_type_embeddings=use_token_type_embeddings
         )
         self.encoder = TransformerEncoder(
             num_layers=num_layers,
@@ -95,14 +98,6 @@ class PostLNTransformerEncoder(nn.Module):
             ln_eps=ln_eps
         )
 
-    def create_attention_mask(self, attention_mask, input_shape, device):
-        # [batch_size, seq_len] -> [batch_size, 1, 1, seq_len]
-        if attention_mask is None:
-            attention_mask = torch.ones(*input_shape, device=device)
-        attention_mask = attention_mask.unsqueeze(1).unsqueeze(1)
-        attention_mask = (1.0 - attention_mask) * -10000.0
-        return attention_mask
-
     def forward(
             self,
             input_ids,
@@ -111,7 +106,7 @@ class PostLNTransformerEncoder(nn.Module):
             get_attention_scores=False
         ):
 
-        attention_mask = self.create_attention_mask(
+        attention_mask = create_attention_mask(
             attention_mask,
             input_ids.shape,
             input_ids.device

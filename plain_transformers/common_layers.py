@@ -62,25 +62,26 @@ class MultiHeadAttention(nn.Module):
         self.value_projection = nn.Linear(self.value_input_dim, d_model)
         self.dropout = nn.Dropout(dropout)
 
-        # attn_type in ["encoder", "decoder", "cross"]
+        # attn_type in ["encoder", "decoder"]
         self.attn_type = "encoder"
 
-        self.register_buffer("masked_val", torch.FloatTensor([-1e4]))
         if context_len is not None:
             self.attn_type = "decoder"
+            self.register_buffer("masked_val", torch.FloatTensor([-1e4]))
             self.register_buffer(
                 "tri_mask", torch.tril(
                     torch.ones((context_len, context_len), dtype=torch.uint8)
                 ).view(1, 1, context_len, context_len)
             )
         else:
+            self.register_buffer("masked_val", None)
             self.register_buffer(
                 "tri_mask", None
             )
 
     def _transpose_to_heads(self, x):
         # (batch_size, seq_len, emb_dim) -> (batch_size, seq_len, n_heads, hidden_per_head)
-        new_shape = x.size()[:-1] + (self.n_heads, self.hidden_per_head)
+        new_shape = x.shape[:-1] + (self.n_heads, self.hidden_per_head)
         x = x.view(*new_shape)
         # (batch_size, seq_len, n_heads, hidden_per_head) ->
         # -> (batch_size, n_heads, seq_len, hidden_per_head)
@@ -111,14 +112,18 @@ class MultiHeadAttention(nn.Module):
 
         if self.attn_type == "decoder":
             decoder_attn_mask = self._generate_decoder_self_attn_mask(0, key_proj.shape[2])
-            torch.where(decoder_attn_mask.bool(), raw_scores, self.masked_val.to(raw_scores.dtype))
+            raw_scores = torch.where(
+                decoder_attn_mask.bool(),
+                raw_scores,
+                self.masked_val.to(raw_scores.dtype)
+            )
 
         if attention_mask is not None:
             raw_scores = raw_scores + attention_mask
         attn_scores = F.softmax(raw_scores / self.scale, dim=-1)
         attn = torch.matmul(attn_scores, value_proj)
         attn = attn.permute(0, 2, 1, 3).contiguous()
-        new_shape = attn.size()[:-2] + (self.d_model,)
+        new_shape = attn.shape[:-2] + (self.d_model,)
         attn = attn.view(*new_shape)
         output = (attn, )
         if get_attention_scores:
@@ -137,6 +142,7 @@ class TransformerEmbedding(nn.Module):
             pos_embedding_type='embedding',
             dropout=0.1,
             use_layer_norm=False,
+            use_token_type_embeddings=True,
             ln_eps=1e-12
         ):
         super(TransformerEmbedding, self).__init__()
@@ -152,6 +158,7 @@ class TransformerEmbedding(nn.Module):
         self.layer_norm = nn.LayerNorm(d_model, eps=ln_eps)
 
         self.use_layer_norm = use_layer_norm
+        self.use_token_type_embeddings = use_token_type_embeddings
 
     def forward(
             self,
@@ -160,9 +167,10 @@ class TransformerEmbedding(nn.Module):
         ):
         token_emb = self.token_embedding(input_ids)
         input_shape = token_emb.shape
-        if token_type_ids is None:
-            token_type_ids = torch.zeros(input_shape[:-1], dtype=torch.long, device=self.pos_ids.device)
-        token_emb = token_emb + self.token_type_embedding(token_type_ids)
+        if self.use_token_type_embeddings:
+            if token_type_ids is None:
+                token_type_ids = torch.zeros(input_shape[:-1], dtype=torch.long, device=self.pos_ids.device)
+            token_emb = token_emb + self.token_type_embedding(token_type_ids)
 
         pos_ids = self.pos_ids[:, :input_shape[1]]
 
@@ -193,6 +201,7 @@ class TransformerEncoder(nn.Module):
             attention_mask=None,
             get_attention_scores=False
         ):
+        # TODO: implement https://arxiv.org/abs/1909.11556
         attn_scores = []
         for layer in self.encoder_layers:
             hidden = layer(
@@ -209,3 +218,43 @@ class TransformerEncoder(nn.Module):
             output = output + (attn_scores, )
         return output
 
+
+class TransformerDecoder(nn.Module):
+    def __init__(
+            self,
+            num_layers,
+            decoder_class,
+            **kwargs
+        ):
+        super(TransformerDecoder, self).__init__()
+        self.decoder_layers = nn.ModuleList([
+            decoder_class(**kwargs) for _ in range(num_layers)
+        ])
+
+    def forward(
+            self,
+            hidden,
+            encoder_hidden_state,
+            attention_mask=None,
+            encoder_attention_mask=None,
+            get_attention_scores=False
+        ):
+        # TODO: implement https://arxiv.org/abs/1909.11556
+        attn_scores = []
+        for layer in self.decoder_layers:
+            hidden = layer(
+                hidden=hidden,
+                encoder_hidden_state=encoder_hidden_state,
+                attention_mask=attention_mask,
+                encoder_attention_mask=encoder_attention_mask,
+                get_attention_scores=get_attention_scores
+            )
+            if get_attention_scores:
+                attn_scores.append(hidden[1])
+            hidden = hidden[0]
+        
+        output = (hidden, )
+        if get_attention_scores:
+            attn_scores = torch.stack(attn_scores, dim=-1)
+            output = output + (attn_scores, )
+        return output

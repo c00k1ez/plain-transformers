@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from common_layers import FFN, MultiHeadAttention, TransformerEmbedding, TransformerEncoder
+from .common_layers import FFN, MultiHeadAttention, TransformerEmbedding, TransformerEncoder
+from .utils import create_attention_mask
 
 
 class PreLNEncoderLayer(nn.Module):
@@ -95,14 +96,6 @@ class PreLNTransformerEncoder(nn.Module):
 
         self.post_encoder_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
-    def create_attention_mask(self, attention_mask, input_shape, device):
-        # [batch_size, seq_len] -> [batch_size, 1, 1, seq_len]
-        if attention_mask is None:
-            attention_mask = torch.ones(*input_shape, device=device)
-        attention_mask = attention_mask.unsqueeze(1).unsqueeze(1)
-        attention_mask = (1.0 - attention_mask) * -10000.0
-        return attention_mask
-
     def forward(
             self,
             input_ids,
@@ -111,7 +104,7 @@ class PreLNTransformerEncoder(nn.Module):
             get_attention_scores=False
         ):
 
-        attention_mask = self.create_attention_mask(
+        attention_mask = create_attention_mask(
             attention_mask,
             input_ids.shape,
             input_ids.device
