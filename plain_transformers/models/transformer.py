@@ -24,7 +24,7 @@ class Transformer(nn.Module):
             vocab_size=encoder_vocab_size
         )
         self.decoder = decoder_class(**kwargs, vocab_size=decoder_vocab_size)
-        self.lm_head = nn.Linear(kwargs['d_model'], kwargs['vocab_size'], bias=False)
+        self.lm_head = nn.Linear(kwargs['d_model'], kwargs['decoder_vocab_size'], bias=False)
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
         if share_encoder_decoder_embeddings:
