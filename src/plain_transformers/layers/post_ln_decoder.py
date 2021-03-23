@@ -364,7 +364,7 @@ class PostLNMultimodalTransformerDecoder(nn.Module):
         )
 
         second_encoder_hidden_state = create_attention_mask(
-            attention_mask=second_encoder_hidden_state,
+            attention_mask=second_encoder_attention_mask,
             input_shape=second_encoder_hidden_state["key"].shape[:-1],
             device=second_encoder_hidden_state["key"].device,
             src_size=input_ids.shape[-1],
