@@ -102,8 +102,8 @@ class MultimodalTransformer(nn.Module):
             }
         hidden = self.decoder(
             input_ids=labels,
-            first_encoder_state=first_encoder_state,
-            second_encoder_state=second_encoder_state,
+            first_encoder_hidden_state=first_encoder_state,
+            second_encoder_hidden_state=second_encoder_state,
             attention_mask=decoder_attention_mask,
             fisrt_encoder_attention_mask=fisrt_encoder_attention_mask,
             second_encoder_attention_mask=second_encoder_attention_mask,
