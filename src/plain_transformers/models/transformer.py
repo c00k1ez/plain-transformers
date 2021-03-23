@@ -19,7 +19,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# TODO: add more flexible opportunity to init encoder & decoder
 # TODO: add label smoothing loss
 class Transformer(nn.Module):
     def __init__(

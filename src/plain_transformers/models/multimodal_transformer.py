@@ -19,7 +19,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# TODO: add more flexible opportunity to init encoder & decoder
 # TODO: add label smoothing loss
 # TODO: write more complex solution for embedding sharing
 class MultimodalTransformer(nn.Module):
