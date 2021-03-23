@@ -218,8 +218,8 @@ class PostLNMultimodalDecoderLayer(nn.Module):
         self,
         hidden,
         encoder_hidden_state,
+        encoder_attention_mask,
         attention_mask=None,
-        encoder_attention_mask=None,
         get_attention_scores=False,
     ):
         (first_encoder_hidden_state, second_encoder_hidden_state) = (
@@ -363,7 +363,7 @@ class PostLNMultimodalTransformerDecoder(nn.Module):
             src_size=input_ids.shape[-1],
         )
 
-        second_encoder_hidden_state = create_attention_mask(
+        second_encoder_attention_mask = create_attention_mask(
             attention_mask=second_encoder_attention_mask,
             input_shape=second_encoder_hidden_state["key"].shape[:-1],
             device=second_encoder_hidden_state["key"].device,
