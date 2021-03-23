@@ -91,10 +91,15 @@ class MultiHeadAttention(nn.Module):
         return x.permute(0, 2, 1, 3)
 
     def _generate_decoder_self_attn_mask(self, q_seq_len, k_seq_len):
-        # TODO: fix case then k_seq_len > q_seq_len
-        attn_mask = self.tri_mask[
-            :, :, k_seq_len - q_seq_len : k_seq_len, :k_seq_len
-        ]
+        # TODO: fix case then k_seq_len < q_seq_len
+        if self.training:
+            attn_mask = self.tri_mask[
+                :, :, k_seq_len - q_seq_len : k_seq_len, :k_seq_len
+            ]
+        else:
+            attn_mask = torch.ones((1, 1, k_seq_len, k_seq_len)).type_as(
+                self.tri_mask
+            )
         return attn_mask
 
     def forward(
