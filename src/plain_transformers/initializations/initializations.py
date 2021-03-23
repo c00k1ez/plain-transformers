@@ -24,7 +24,9 @@ def normal_initialization(
     if isinstance(module, (nn.Linear, nn.Embedding)):
         module.weight.data.normal_(mean=0.0, std=init_range)
         if isinstance(module, nn.Linear):
-            module.bias.data.zero_()
+            if module.bias.data is not None:
+                module.bias.data.zero_()
         elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
+            if module.bias.data is not None:
+                module.bias.data.zero_()
             module.weight.data.fill_(1.0)
