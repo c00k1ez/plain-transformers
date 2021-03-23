@@ -81,7 +81,7 @@ class MultimodalTransformer(nn.Module):
         second_encoder_attention_mask: Optional[torch.Tensor] = None,
         get_attention_scores: Optional[bool] = False,
         cached_encoder_state: Optional[
-            Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]],
+            Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]
         ] = None,
         return_encoder_state: Optional[bool] = False,
         compute_loss: Optional[bool] = False,
