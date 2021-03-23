@@ -8,14 +8,14 @@ from .utils import create_attention_mask
 
 class PreLNEncoderLayer(nn.Module):
     def __init__(
-            self,
-            d_model=512,
-            n_heads=8,
-            dim_feedforward=2048,
-            dropout=0.1,
-            activation_name="gelu",
-            ln_eps=1e-12
-        ):
+        self,
+        d_model=512,
+        n_heads=8,
+        dim_feedforward=2048,
+        dropout=0.1,
+        activation_name="gelu",
+        ln_eps=1e-12
+    ):
         super(PreLNEncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(d_model, n_heads, dropout)
         self.dropout = nn.Dropout(dropout)
@@ -24,11 +24,11 @@ class PreLNEncoderLayer(nn.Module):
         self.pre_ffn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
     def forward(
-            self,
-            hidden,
-            attention_mask=None,
-            get_attention_scores=False
-        ):
+        self,
+        hidden,
+        attention_mask=None,
+        get_attention_scores=False
+    ):
         attn_scores = None
         block_state = self.pre_attn_ln(hidden)
         block_state = self.self_attention(
@@ -56,21 +56,21 @@ class PreLNEncoderLayer(nn.Module):
 # TODO: think about merge matrix for attention
 class PreLNTransformerEncoder(nn.Module):
     def __init__(
-            self,
-            d_model,
-            vocab_size,
-            max_length,
-            pad_token_id,
-            token_type_vocab_size,
-            dropout,
-            n_heads,
-            dim_feedforward,
-            num_layers,
-            use_embedding_layer_norm=False,
-            pos_embedding_type='embedding',
-            activation_name="gelu",
-            ln_eps=1e-12
-        ):
+        self,
+        d_model,
+        vocab_size,
+        max_length,
+        pad_token_id,
+        token_type_vocab_size,
+        dropout,
+        n_heads,
+        dim_feedforward,
+        num_layers,
+        use_embedding_layer_norm=False,
+        pos_embedding_type='embedding',
+        activation_name="gelu",
+        ln_eps=1e-12
+    ):
         super(PreLNTransformerEncoder, self).__init__()
         self.embedding = TransformerEmbedding(
             vocab_size=vocab_size,
@@ -97,12 +97,12 @@ class PreLNTransformerEncoder(nn.Module):
         self.post_encoder_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
     def forward(
-            self,
-            input_ids,
-            attention_mask=None,
-            token_type_ids=None,
-            get_attention_scores=False
-        ):
+        self,
+        input_ids,
+        attention_mask=None,
+        token_type_ids=None,
+        get_attention_scores=False
+    ):
 
         attention_mask = create_attention_mask(
             attention_mask,

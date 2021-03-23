@@ -16,12 +16,12 @@ def act_to_func(act_name):
 
 class FFN(nn.Module):
     def __init__(
-            self,
-            d_model=512,
-            dim_feedforward=2048,
-            dropout=0.1,
-            activation_name="gelu"
-        ):
+        self,
+        d_model=512,
+        dim_feedforward=2048,
+        dropout=0.1,
+        activation_name="gelu"
+    ):
         super(FFN, self).__init__()   
         self.d_model = d_model
         self.activation_name = activation_name
@@ -38,15 +38,15 @@ class FFN(nn.Module):
 
 class MultiHeadAttention(nn.Module):
     def __init__(
-            self,
-            d_model=512,
-            n_heads=8,
-            dropout=0.1,
-            query_input_dim=None,
-            key_input_dim=None,
-            value_input_dim=None,
-            context_len=None
-        ):
+        self,
+        d_model=512,
+        n_heads=8,
+        dropout=0.1,
+        query_input_dim=None,
+        key_input_dim=None,
+        value_input_dim=None,
+        context_len=None
+    ):
         super(MultiHeadAttention, self).__init__()
         assert d_model % n_heads == 0
         self.d_model = d_model
@@ -93,13 +93,13 @@ class MultiHeadAttention(nn.Module):
         return attn_mask
 
     def forward(
-            self,
-            query,
-            key,
-            value,
-            attention_mask=None,
-            get_attention_scores=False
-        ):
+        self,
+        query,
+        key,
+        value,
+        attention_mask=None,
+        get_attention_scores=False
+    ):
         query_proj = self.query_projection(query)
         key_proj = self.key_projection(key)
         value_proj = self.value_projection(value)
@@ -133,18 +133,18 @@ class MultiHeadAttention(nn.Module):
 
 class TransformerEmbedding(nn.Module):
     def __init__(
-            self,
-            vocab_size,
-            d_model,
-            max_length,
-            pad_token_id,
-            token_type_vocab_size,
-            pos_embedding_type='embedding',
-            dropout=0.1,
-            use_layer_norm=False,
-            use_token_type_embeddings=True,
-            ln_eps=1e-12
-        ):
+        self,
+        vocab_size,
+        d_model,
+        max_length,
+        pad_token_id,
+        token_type_vocab_size,
+        pos_embedding_type='embedding',
+        dropout=0.1,
+        use_layer_norm=False,
+        use_token_type_embeddings=True,
+        ln_eps=1e-12
+    ):
         super(TransformerEmbedding, self).__init__()
         assert pos_embedding_type in ['embedding', 'timing']
         # TODO: implement timing signal
@@ -161,10 +161,10 @@ class TransformerEmbedding(nn.Module):
         self.use_token_type_embeddings = use_token_type_embeddings
 
     def forward(
-            self,
-            input_ids,
-            token_type_ids=None
-        ):
+        self,
+        input_ids,
+        token_type_ids=None
+    ):
         token_emb = self.token_embedding(input_ids)
         input_shape = token_emb.shape
         if self.use_token_type_embeddings:
@@ -185,22 +185,22 @@ class TransformerEmbedding(nn.Module):
 
 class TransformerEncoder(nn.Module):
     def __init__(
-            self,
-            num_layers,
-            encoder_class,
-            **kwargs
-        ):
+        self,
+        num_layers,
+        encoder_class,
+        **kwargs
+    ):
         super(TransformerEncoder, self).__init__()
         self.encoder_layers = nn.ModuleList([
             encoder_class(**kwargs) for _ in range(num_layers)
         ])
 
     def forward(
-            self,
-            hidden,
-            attention_mask=None,
-            get_attention_scores=False
-        ):
+        self,
+        hidden,
+        attention_mask=None,
+        get_attention_scores=False
+    ):
         # TODO: implement https://arxiv.org/abs/1909.11556
         attn_scores = []
         for layer in self.encoder_layers:
@@ -221,24 +221,24 @@ class TransformerEncoder(nn.Module):
 
 class TransformerDecoder(nn.Module):
     def __init__(
-            self,
-            num_layers,
-            decoder_class,
-            **kwargs
-        ):
+        self,
+        num_layers,
+        decoder_class,
+        **kwargs
+    ):
         super(TransformerDecoder, self).__init__()
         self.decoder_layers = nn.ModuleList([
             decoder_class(**kwargs) for _ in range(num_layers)
         ])
 
     def forward(
-            self,
-            hidden,
-            encoder_hidden_state,
-            attention_mask=None,
-            encoder_attention_mask=None,
-            get_attention_scores=False
-        ):
+        self,
+        hidden,
+        encoder_hidden_state,
+        attention_mask=None,
+        encoder_attention_mask=None,
+        get_attention_scores=False
+    ):
         # TODO: implement https://arxiv.org/abs/1909.11556
         attn_scores = []
         for layer in self.decoder_layers:

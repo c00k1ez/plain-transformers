@@ -8,14 +8,14 @@ from .utils import create_attention_mask
 
 class PostLNDecoderLayer(nn.Module):
     def __init__(
-            self,
-            d_model=512,
-            n_heads=8,
-            dim_feedforward=2048,
-            dropout=0.1,
-            activation_name="gelu",
-            ln_eps=1e-12,
-            context_len=512
+        self,
+        d_model=512,
+        n_heads=8,
+        dim_feedforward=2048,
+        dropout=0.1,
+        activation_name="gelu",
+        ln_eps=1e-12,
+        context_len=512
     ):
         super(PostLNDecoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(
@@ -44,12 +44,12 @@ class PostLNDecoderLayer(nn.Module):
         self.post_ffn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
     def forward(
-            self,
-            hidden,
-            encoder_hidden_state,
-            attention_mask=None,
-            encoder_attention_mask=None,
-            get_attention_scores=False
+        self,
+        hidden,
+        encoder_hidden_state,
+        attention_mask=None,
+        encoder_attention_mask=None,
+        get_attention_scores=False
     ):
         attn_scores = []
         self_attn_block = self.self_attention(
@@ -93,20 +93,20 @@ class PostLNDecoderLayer(nn.Module):
 
 class PostLNTransformerDecoder(nn.Module):
     def __init__(
-            self,
-            d_model,
-            vocab_size,
-            max_length,
-            pad_token_id,
-            token_type_vocab_size,
-            dropout,
-            n_heads,
-            dim_feedforward,
-            num_layers,
-            use_embedding_layer_norm=False,
-            pos_embedding_type='embedding',
-            activation_name="gelu",
-            ln_eps=1e-12
+        self,
+        d_model,
+        vocab_size,
+        max_length,
+        pad_token_id,
+        token_type_vocab_size,
+        dropout,
+        n_heads,
+        dim_feedforward,
+        num_layers,
+        use_embedding_layer_norm=False,
+        pos_embedding_type='embedding',
+        activation_name="gelu",
+        ln_eps=1e-12
     ):
         super(PostLNTransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
@@ -135,12 +135,12 @@ class PostLNTransformerDecoder(nn.Module):
         )
 
     def forward(
-            self,
-            input_ids,
-            encoder_hidden_state,
-            attention_mask=None,
-            encoder_attention_mask=None,
-            get_attention_scores=False
+        self,
+        input_ids,
+        encoder_hidden_state,
+        attention_mask=None,
+        encoder_attention_mask=None,
+        get_attention_scores=False
     ):
         attention_mask = create_attention_mask(
             attention_mask=attention_mask,

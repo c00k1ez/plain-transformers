@@ -7,16 +7,16 @@ import torch.nn.functional as F
 # TODO: add label smoothing loss
 class Transformer(nn.Module):
     def __init__(
-            self,
-            encoder_class,
-            decoder_class,
-            encoder_vocab_size,
-            decoder_vocab_size,
-            use_token_type_embeddings=False,
-            share_decoder_head_weights=True,
-            share_encoder_decoder_embeddings=False,
-            **kwargs
-        ):
+        self,
+        encoder_class,
+        decoder_class,
+        encoder_vocab_size,
+        decoder_vocab_size,
+        use_token_type_embeddings=False,
+        share_decoder_head_weights=True,
+        share_encoder_decoder_embeddings=False,
+        **kwargs
+    ):
         super(Transformer, self).__init__()
         self.encoder = encoder_class(
             **kwargs,
@@ -35,17 +35,17 @@ class Transformer(nn.Module):
         self.pad_token_id = kwargs['pad_token_id']
 
     def forward(
-            self,
-            input_ids,
-            labels,
-            token_type_ids=None,
-            decoder_attention_mask=None,
-            encoder_attention_mask=None,
-            get_attention_scores=False,
-            cached_encoder_state=None,
-            return_encoder_state=False,
-            compute_loss=False
-        ):
+        self,
+        input_ids,
+        labels,
+        token_type_ids=None,
+        decoder_attention_mask=None,
+        encoder_attention_mask=None,
+        get_attention_scores=False,
+        cached_encoder_state=None,
+        return_encoder_state=False,
+        compute_loss=False
+    ):
         encoder_state = None
         attn_scores = {}
         if cached_encoder_state is not None:

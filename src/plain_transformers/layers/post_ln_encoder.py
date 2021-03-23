@@ -8,14 +8,14 @@ from .utils import create_attention_mask
 
 class PostLNEncoderLayer(nn.Module):
     def __init__(
-            self,
-            d_model=512,
-            n_heads=8,
-            dim_feedforward=2048,
-            dropout=0.1,
-            activation_name="gelu",
-            ln_eps=1e-12
-        ):
+        self,
+        d_model=512,
+        n_heads=8,
+        dim_feedforward=2048,
+        dropout=0.1,
+        activation_name="gelu",
+        ln_eps=1e-12
+    ):
         super(PostLNEncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(d_model, n_heads, dropout)
         self.dropout = nn.Dropout(dropout)
@@ -26,11 +26,11 @@ class PostLNEncoderLayer(nn.Module):
         self.merge_matrix = nn.Linear(d_model, d_model)
 
     def forward(
-            self,
-            hidden,
-            attention_mask=None,
-            get_attention_scores=False
-        ):
+        self,
+        hidden,
+        attention_mask=None,
+        get_attention_scores=False
+    ):
         attn_scores = None
         block_state = self.self_attention(
             query=hidden,
@@ -58,22 +58,22 @@ class PostLNEncoderLayer(nn.Module):
 
 class PostLNTransformerEncoder(nn.Module):
     def __init__(
-            self,
-            d_model,
-            vocab_size,
-            max_length,
-            pad_token_id,
-            token_type_vocab_size,
-            dropout,
-            n_heads,
-            dim_feedforward,
-            num_layers,
-            use_embedding_layer_norm=False,
-            pos_embedding_type='embedding',
-            activation_name="gelu",
-            ln_eps=1e-12,
-            use_token_type_embeddings=True
-        ):
+        self,
+        d_model,
+        vocab_size,
+        max_length,
+        pad_token_id,
+        token_type_vocab_size,
+        dropout,
+        n_heads,
+        dim_feedforward,
+        num_layers,
+        use_embedding_layer_norm=False,
+        pos_embedding_type='embedding',
+        activation_name="gelu",
+        ln_eps=1e-12,
+        use_token_type_embeddings=True
+    ):
         super(PostLNTransformerEncoder, self).__init__()
         self.embedding = TransformerEmbedding(
             vocab_size=vocab_size,
@@ -99,12 +99,12 @@ class PostLNTransformerEncoder(nn.Module):
         )
 
     def forward(
-            self,
-            input_ids,
-            attention_mask=None,
-            token_type_ids=None,
-            get_attention_scores=False
-        ):
+        self,
+        input_ids,
+        attention_mask=None,
+        token_type_ids=None,
+        get_attention_scores=False
+    ):
 
         attention_mask = create_attention_mask(
             attention_mask,
