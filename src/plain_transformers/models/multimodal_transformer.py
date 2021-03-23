@@ -1,3 +1,5 @@
+from typing import Optional, Callable, Dict, Union, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,18 +11,18 @@ import torch.nn.functional as F
 class MultimodalTransformer(nn.Module):
     def __init__(
         self,
-        first_encoder_class,
-        second_encoder_class,
-        decoder_class,
-        first_encoder_vocab_size,
-        second_encoder_vocab_size,
-        decoder_vocab_size,
-        use_token_type_embeddings=False,
-        share_decoder_head_weights=True,
-        share_encoder_decoder_embeddings=False,
-        share_encoder_embeddings=False,
+        first_encoder_class: Callable,
+        second_encoder_class: Callable,
+        decoder_class: Callable,
+        first_encoder_vocab_size: int,
+        second_encoder_vocab_size: int,
+        decoder_vocab_size: int,
+        use_token_type_embeddings: Optional[bool] = False,
+        share_decoder_head_weights: Optional[bool] = True,
+        share_encoder_decoder_embeddings: Optional[bool] = False,
+        share_encoder_embeddings: Optional[bool] = False,
         **kwargs
-    ):
+    ) -> None:
         super(MultimodalTransformer, self).__init__()
         self.first_encoder = first_encoder_class(
             **kwargs,
@@ -57,17 +59,26 @@ class MultimodalTransformer(nn.Module):
 
     def forward(
         self,
-        first_encoder_input_ids,
-        second_encoder_input_ids,
-        labels,
-        decoder_attention_mask=None,
-        first_encoder_attention_mask=None,
-        second_encoder_attention_mask=None,
-        get_attention_scores=False,
-        cached_encoder_state=None,
-        return_encoder_state=False,
-        compute_loss=False,
-    ):
+        first_encoder_input_ids: torch.Tensor,
+        second_encoder_input_ids: torch.Tensor,
+        labels: torch.Tensor,
+        decoder_attention_mask: Optional[torch.Tensor] = None,
+        first_encoder_attention_mask: Optional[torch.Tensor] = None,
+        second_encoder_attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+        cached_encoder_state: Optional[
+            Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]],
+        ] = None,
+        return_encoder_state: Optional[bool] = False,
+        compute_loss: Optional[bool] = False,
+    ) -> Dict[
+        str,
+        Union[
+            torch.Tensor,
+            Dict[str, torch.Tensor],
+            Dict[str, Dict[str, torch.Tensor]],
+        ],
+    ]:
         first_encoder_state, second_encoder_state = None, None
         attn_scores = {}
         if cached_encoder_state is not None:

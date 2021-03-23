@@ -1,3 +1,5 @@
+from typing import Optional, Callable, Dict, Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,29 +10,27 @@ import torch.nn.functional as F
 class Transformer(nn.Module):
     def __init__(
         self,
-        encoder_class,
-        decoder_class,
-        encoder_vocab_size,
-        decoder_vocab_size,
-        use_token_type_embeddings=False,
-        share_decoder_head_weights=True,
-        share_encoder_decoder_embeddings=False,
+        encoder_class: Callable,
+        decoder_class: Callable,
+        encoder_vocab_size: int,
+        decoder_vocab_size: int,
+        use_token_type_embeddings: Optional[bool] = False,
+        share_decoder_head_weights: Optional[bool] = True,
+        share_encoder_decoder_embeddings: Optional[bool] = False,
         **kwargs
-    ):
+    ) -> None:
         super(Transformer, self).__init__()
         self.encoder = encoder_class(
             **kwargs,
             use_token_type_embeddings=use_token_type_embeddings,
-            vocab_size=encoder_vocab_size
+            vocab_size=encoder_vocab_size,
         )
         self.decoder = decoder_class(
             **kwargs,
             vocab_size=decoder_vocab_size,
         )
         self.lm_head = nn.Linear(
-            kwargs["d_model"],
-            decoder_vocab_size,
-            bias=False
+            kwargs["d_model"], decoder_vocab_size, bias=False
         )
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
@@ -45,16 +45,16 @@ class Transformer(nn.Module):
 
     def forward(
         self,
-        input_ids,
-        labels,
-        token_type_ids=None,
-        decoder_attention_mask=None,
-        encoder_attention_mask=None,
-        get_attention_scores=False,
-        cached_encoder_state=None,
-        return_encoder_state=False,
-        compute_loss=False,
-    ):
+        input_ids: torch.Tensor,
+        labels: torch.Tensor,
+        token_type_ids: Optional[torch.Tensor] = None,
+        decoder_attention_mask: Optional[torch.Tensor] = None,
+        encoder_attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+        cached_encoder_state: Optional[Dict[str, torch.Tensor]] = None,
+        return_encoder_state: Optional[bool] = False,
+        compute_loss: Optional[bool] = False,
+    ) -> Dict[str, Union[torch.Tensor, Dict[str, torch.Tensor]]]:
         encoder_state = None
         attn_scores = {}
         if cached_encoder_state is not None:
@@ -71,7 +71,7 @@ class Transformer(nn.Module):
 
             encoder_state = {
                 "key": encoder_state[0],
-                "value": encoder_state[0]
+                "value": encoder_state[0],
             }
         hidden = self.decoder(
             input_ids=labels,
@@ -100,7 +100,6 @@ class Transformer(nn.Module):
                 dim=-1,
             )
             output["loss_val"] = self.loss_function(
-                raw_probs.permute(0, 2, 1),
-                labels
+                raw_probs.permute(0, 2, 1), labels
             )
         return output

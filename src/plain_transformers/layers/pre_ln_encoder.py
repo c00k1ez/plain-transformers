@@ -1,3 +1,5 @@
+from typing import Optional, Union, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,13 +16,13 @@ from .utils import create_attention_mask
 class PreLNEncoderLayer(nn.Module):
     def __init__(
         self,
-        d_model=512,
-        n_heads=8,
-        dim_feedforward=2048,
-        dropout=0.1,
-        activation_name="gelu",
-        ln_eps=1e-12,
-    ):
+        d_model: int,
+        n_heads: int,
+        dim_feedforward: int,
+        dropout: Optional[float] = 0.1,
+        activation_name: Optional[str] = "gelu",
+        ln_eps: Optional[float] = 1e-12,
+    ) -> None:
         super(PreLNEncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(d_model, n_heads, dropout)
         self.dropout = nn.Dropout(dropout)
@@ -30,7 +32,13 @@ class PreLNEncoderLayer(nn.Module):
         self.pre_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
         self.pre_ffn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
-    def forward(self, hidden, attention_mask=None, get_attention_scores=False):
+    def forward(
+        self,
+        hidden: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+
         attn_scores = None
         block_state = self.pre_attn_ln(hidden)
         block_state = self.self_attention(
@@ -59,20 +67,20 @@ class PreLNEncoderLayer(nn.Module):
 class PreLNTransformerEncoder(nn.Module):
     def __init__(
         self,
-        d_model,
-        vocab_size,
-        max_length,
-        pad_token_id,
-        token_type_vocab_size,
-        dropout,
-        n_heads,
-        dim_feedforward,
-        num_layers,
-        use_embedding_layer_norm=False,
-        pos_embedding_type="embedding",
-        activation_name="gelu",
-        ln_eps=1e-12,
-    ):
+        d_model: int,
+        vocab_size: int,
+        max_length: int,
+        pad_token_id: int,
+        token_type_vocab_size: int,
+        n_heads: int,
+        dim_feedforward: int,
+        num_layers: int,
+        dropout: Optional[float] = 0.1,
+        use_embedding_layer_norm: Optional[bool] = False,
+        pos_embedding_type: Optional[str] = "embedding",
+        activation_name: Optional[str] = "gelu",
+        ln_eps: Optional[float] = 1e-12,
+    ) -> None:
         super(PreLNTransformerEncoder, self).__init__()
         self.embedding = TransformerEmbedding(
             vocab_size=vocab_size,
@@ -100,11 +108,11 @@ class PreLNTransformerEncoder(nn.Module):
 
     def forward(
         self,
-        input_ids,
-        attention_mask=None,
-        token_type_ids=None,
-        get_attention_scores=False,
-    ):
+        input_ids: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        token_type_ids: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
 
         attention_mask = create_attention_mask(
             attention_mask, input_ids.shape, input_ids.device

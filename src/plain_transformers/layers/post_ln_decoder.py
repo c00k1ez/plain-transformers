@@ -1,3 +1,5 @@
+from typing import Optional, Union, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,14 +16,14 @@ from .utils import create_attention_mask
 class PostLNDecoderLayer(nn.Module):
     def __init__(
         self,
-        d_model=512,
-        n_heads=8,
-        dim_feedforward=2048,
-        dropout=0.1,
-        activation_name="gelu",
-        ln_eps=1e-12,
-        context_len=512,
-    ):
+        d_model: int,
+        n_heads: int,
+        dim_feedforward: int,
+        dropout: Optional[float] = 0.1,
+        activation_name: Optional[str] = "gelu",
+        ln_eps: Optional[float] = 1e-12,
+        context_len: Optional[int] = 512,
+    ) -> None:
         super(PostLNDecoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(
             d_model=d_model,
@@ -48,12 +50,12 @@ class PostLNDecoderLayer(nn.Module):
 
     def forward(
         self,
-        hidden,
-        encoder_hidden_state,
-        attention_mask=None,
-        encoder_attention_mask=None,
-        get_attention_scores=False,
-    ):
+        hidden: torch.Tensor,
+        encoder_hidden_state: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        encoder_attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         attn_scores = []
         self_attn_block = self.self_attention(
             query=hidden,
@@ -99,20 +101,20 @@ class PostLNDecoderLayer(nn.Module):
 class PostLNTransformerDecoder(nn.Module):
     def __init__(
         self,
-        d_model,
-        vocab_size,
-        max_length,
-        pad_token_id,
-        token_type_vocab_size,
-        dropout,
-        n_heads,
-        dim_feedforward,
-        num_layers,
-        use_embedding_layer_norm=False,
-        pos_embedding_type="embedding",
-        activation_name="gelu",
-        ln_eps=1e-12,
-    ):
+        d_model: int,
+        vocab_size: int,
+        max_length: int,
+        pad_token_id: int,
+        token_type_vocab_size: int,
+        n_heads: int,
+        dim_feedforward: int,
+        num_layers: int,
+        dropout: Optional[float] = 0.1,
+        use_embedding_layer_norm: Optional[bool] = False,
+        pos_embedding_type: Optional[str] = "embedding",
+        activation_name: Optional[str] = "gelu",
+        ln_eps: Optional[float] = 1e-12,
+    ) -> None:
         super(PostLNTransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
             vocab_size=vocab_size,
@@ -141,12 +143,13 @@ class PostLNTransformerDecoder(nn.Module):
 
     def forward(
         self,
-        input_ids,
-        encoder_hidden_state,
-        attention_mask=None,
-        encoder_attention_mask=None,
-        get_attention_scores=False,
-    ):
+        input_ids: torch.Tensor,
+        encoder_hidden_state: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        encoder_attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
+
         attention_mask = create_attention_mask(
             attention_mask=attention_mask,
             input_shape=input_ids.shape,
@@ -176,14 +179,14 @@ class PostLNTransformerDecoder(nn.Module):
 class PostLNMultimodalDecoderLayer(nn.Module):
     def __init__(
         self,
-        d_model=512,
-        n_heads=8,
-        dim_feedforward=2048,
-        dropout=0.1,
-        activation_name="gelu",
-        ln_eps=1e-12,
-        context_len=512,
-    ):
+        d_model: int,
+        n_heads: int,
+        dim_feedforward: int,
+        dropout: Optional[float] = 0.1,
+        activation_name: Optional[str] = "gelu",
+        ln_eps: Optional[float] = 1e-12,
+        context_len: Optional[int] = 512,
+    ) -> None:
         super(PostLNMultimodalDecoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(
             d_model=d_model,
@@ -216,12 +219,12 @@ class PostLNMultimodalDecoderLayer(nn.Module):
 
     def forward(
         self,
-        hidden,
-        encoder_hidden_state,
-        encoder_attention_mask,
-        attention_mask=None,
-        get_attention_scores=False,
-    ):
+        hidden: torch.Tensor,
+        encoder_hidden_state: Tuple[torch.Tensor, torch.Tensor],
+        encoder_attention_mask: Tuple[torch.Tensor, torch.Tensor],
+        attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         (first_encoder_hidden_state, second_encoder_hidden_state) = (
             encoder_hidden_state[0],
             encoder_hidden_state[1],
@@ -300,20 +303,20 @@ class PostLNMultimodalDecoderLayer(nn.Module):
 class PostLNMultimodalTransformerDecoder(nn.Module):
     def __init__(
         self,
-        d_model,
-        vocab_size,
-        max_length,
-        pad_token_id,
-        token_type_vocab_size,
-        dropout,
-        n_heads,
-        dim_feedforward,
-        num_layers,
-        use_embedding_layer_norm=False,
-        pos_embedding_type="embedding",
-        activation_name="gelu",
-        ln_eps=1e-12,
-    ):
+        d_model: int,
+        vocab_size: int,
+        max_length: int,
+        pad_token_id: int,
+        token_type_vocab_size: int,
+        n_heads: int,
+        dim_feedforward: int,
+        num_layers: int,
+        dropout: Optional[float] = 0.1,
+        use_embedding_layer_norm: Optional[bool] = False,
+        pos_embedding_type: Optional[str] = "embedding",
+        activation_name: Optional[str] = "gelu",
+        ln_eps: Optional[float] = 1e-12,
+    ) -> None:
         super(PostLNMultimodalTransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
             vocab_size=vocab_size,
@@ -342,14 +345,14 @@ class PostLNMultimodalTransformerDecoder(nn.Module):
 
     def forward(
         self,
-        input_ids,
-        first_encoder_hidden_state,
-        second_encoder_hidden_state,
-        attention_mask=None,
-        first_encoder_attention_mask=None,
-        second_encoder_attention_mask=None,
-        get_attention_scores=False,
-    ):
+        input_ids: torch.Tensor,
+        first_encoder_hidden_state: torch.Tensor,
+        second_encoder_hidden_state: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        first_encoder_attention_mask: Optional[torch.Tensor] = None,
+        second_encoder_attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         attention_mask = create_attention_mask(
             attention_mask=attention_mask,
             input_shape=input_ids.shape,

@@ -1,24 +1,20 @@
+from typing import Optional, Tuple, Union, Callable
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-def act_to_func(act_name):
-    acts = {"gelu": F.gelu, "relu": F.relu}
-    if act_name in acts:
-        return acts[act_name]
-    else:
-        return F.relu
+from .utils import act_to_func
 
 
 class FFN(nn.Module):
     def __init__(
         self,
-        d_model=512,
-        dim_feedforward=2048,
-        dropout=0.1,
-        activation_name="gelu",
-    ):
+        d_model: int,
+        dim_feedforward: int,
+        dropout: Optional[float] = 0.1,
+        activation_name: Optional[str] = "gelu",
+    ) -> None:
         super(FFN, self).__init__()
         self.d_model = d_model
         self.activation_name = activation_name
@@ -27,7 +23,7 @@ class FFN(nn.Module):
         self.layer_reduce = nn.Linear(dim_feedforward, d_model)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, hidden):
+    def forward(self, hidden: torch.Tensor) -> torch.Tensor:
         hid_state = self.layer_inc(hidden)
         hid_state = self.dropout(act_to_func(self.activation_name)(hid_state))
         return self.layer_reduce(hid_state)
@@ -36,14 +32,14 @@ class FFN(nn.Module):
 class MultiHeadAttention(nn.Module):
     def __init__(
         self,
-        d_model=512,
-        n_heads=8,
-        dropout=0.1,
-        query_input_dim=None,
-        key_input_dim=None,
-        value_input_dim=None,
-        context_len=None,
-    ):
+        d_model: int,
+        n_heads: int,
+        dropout: Optional[float] = 0.1,
+        query_input_dim: Optional[int] = None,
+        key_input_dim: Optional[int] = None,
+        value_input_dim: Optional[int] = None,
+        context_len: Optional[int] = None,
+    ) -> None:
         super(MultiHeadAttention, self).__init__()
         assert d_model % n_heads == 0
         self.d_model = d_model
@@ -81,7 +77,7 @@ class MultiHeadAttention(nn.Module):
             self.register_buffer("masked_val", None)
             self.register_buffer("tri_mask", None)
 
-    def _transpose_to_heads(self, x):
+    def _transpose_to_heads(self, x: torch.Tensor) -> torch.Tensor:
         # (batch_size, seq_len, emb_dim) ->
         # (batch_size, seq_len, n_heads, hidden_per_head)
         new_shape = x.shape[:-1] + (self.n_heads, self.hidden_per_head)
@@ -90,7 +86,9 @@ class MultiHeadAttention(nn.Module):
         # -> (batch_size, n_heads, seq_len, hidden_per_head)
         return x.permute(0, 2, 1, 3)
 
-    def _generate_decoder_self_attn_mask(self, q_seq_len, k_seq_len):
+    def _generate_decoder_self_attn_mask(
+        self, q_seq_len: int, k_seq_len: int
+    ) -> torch.Tensor:
         # TODO: fix case then k_seq_len < q_seq_len
         if self.training:
             attn_mask = self.tri_mask[
@@ -104,12 +102,12 @@ class MultiHeadAttention(nn.Module):
 
     def forward(
         self,
-        query,
-        key,
-        value,
-        attention_mask=None,
-        get_attention_scores=False,
-    ):
+        query: torch.Tensor,
+        key: torch.Tensor,
+        value: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         query_proj = self.query_projection(query)
         key_proj = self.key_projection(key)
         value_proj = self.value_projection(value)
@@ -146,17 +144,17 @@ class MultiHeadAttention(nn.Module):
 class TransformerEmbedding(nn.Module):
     def __init__(
         self,
-        vocab_size,
-        d_model,
-        max_length,
-        pad_token_id,
-        token_type_vocab_size,
-        pos_embedding_type="embedding",
-        dropout=0.1,
-        use_layer_norm=False,
-        use_token_type_embeddings=True,
-        ln_eps=1e-12,
-    ):
+        vocab_size: int,
+        d_model: int,
+        max_length: int,
+        pad_token_id: int,
+        token_type_vocab_size: int,
+        pos_embedding_type: Optional[str] = "embedding",
+        dropout: Optional[float] = 0.1,
+        use_layer_norm: Optional[bool] = False,
+        use_token_type_embeddings: Optional[bool] = True,
+        ln_eps: Optional[float] = 1e-12,
+    ) -> None:
         super(TransformerEmbedding, self).__init__()
         assert pos_embedding_type in ["embedding", "timing"]
         # TODO: implement timing signal
@@ -176,7 +174,11 @@ class TransformerEmbedding(nn.Module):
         self.use_layer_norm = use_layer_norm
         self.use_token_type_embeddings = use_token_type_embeddings
 
-    def forward(self, input_ids, token_type_ids=None):
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        token_type_ids: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         token_emb = self.token_embedding(input_ids)
         input_shape = token_emb.shape
         if self.use_token_type_embeddings:
@@ -200,13 +202,23 @@ class TransformerEmbedding(nn.Module):
 
 
 class TransformerEncoder(nn.Module):
-    def __init__(self, num_layers, encoder_class, **kwargs):
+    def __init__(
+        self,
+        num_layers: int,
+        encoder_class: Callable,
+        **kwargs,
+    ) -> None:
         super(TransformerEncoder, self).__init__()
         self.encoder_layers = nn.ModuleList(
             [encoder_class(**kwargs) for _ in range(num_layers)]
         )
 
-    def forward(self, hidden, attention_mask=None, get_attention_scores=False):
+    def forward(
+        self,
+        hidden: torch.Tensor,
+        attention_mask: Optional[torch.Tensor] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         # TODO: implement https://arxiv.org/abs/1909.11556
         attn_scores = []
         for layer in self.encoder_layers:
@@ -226,7 +238,12 @@ class TransformerEncoder(nn.Module):
 
 
 class TransformerDecoder(nn.Module):
-    def __init__(self, num_layers, decoder_class, **kwargs):
+    def __init__(
+        self,
+        num_layers: int,
+        decoder_class: Callable,
+        **kwargs,
+    ) -> None:
         super(TransformerDecoder, self).__init__()
         self.decoder_layers = nn.ModuleList(
             [decoder_class(**kwargs) for _ in range(num_layers)]
@@ -234,12 +251,16 @@ class TransformerDecoder(nn.Module):
 
     def forward(
         self,
-        hidden,
-        encoder_hidden_state,
-        attention_mask=None,
-        encoder_attention_mask=None,
-        get_attention_scores=False,
-    ):
+        hidden: torch.Tensor,
+        encoder_hidden_state: Union[
+            torch.Tensor, Tuple[torch.Tensor, torch.Tensor]
+        ],
+        attention_mask: Optional[torch.Tensor] = None,
+        encoder_attention_mask: Optional[
+            Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]
+        ] = None,
+        get_attention_scores: Optional[bool] = False,
+    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         # TODO: implement https://arxiv.org/abs/1909.11556
         attn_scores = []
         for layer in self.decoder_layers:
