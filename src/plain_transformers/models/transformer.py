@@ -26,26 +26,67 @@ class Transformer(nn.Module):
         self,
         encoder_class: Callable,
         decoder_class: Callable,
+        d_model: int,
         encoder_vocab_size: int,
+        encoder_max_length: int,
+        encoder_pad_token_id: int,
+        encoder_token_type_vocab_size: int,
+        encoder_n_heads: int,
+        encoder_dim_feedforward: int,
+        encoder_num_layers: int,
+        decoder_max_length: int,
         decoder_vocab_size: int,
-        use_token_type_embeddings: Optional[bool] = False,
+        decoder_pad_token_id: int,
+        decoder_token_type_vocab_size: int,
+        decoder_n_heads: int,
+        decoder_dim_feedforward: int,
+        decoder_num_layers: int,
+        decoder_use_embedding_layer_norm: Optional[bool] = True,
+        decoder_pos_embedding_type: Optional[str] = "embedding",
+        decoder_activation_name: Optional[str] = "gelu",
+        decoder_ln_eps: Optional[float] = 1e-12,
+        decoder_dropout: Optional[float] = 0.1,
+        encoder_dropout: Optional[float] = 0.1,
+        encoder_use_embedding_layer_norm: Optional[bool] = True,
+        encoder_pos_embedding_type: Optional[str] = "embedding",
+        encoder_activation_name: Optional[str] = "gelu",
+        encoder_ln_eps: Optional[float] = 1e-12,
+        encoder_use_token_type_embeddings: Optional[bool] = True,
         share_decoder_head_weights: Optional[bool] = True,
         share_encoder_decoder_embeddings: Optional[bool] = False,
-        **kwargs
     ) -> None:
         super(Transformer, self).__init__()
         self.encoder = encoder_class(
-            **kwargs,
-            use_token_type_embeddings=use_token_type_embeddings,
+            max_length=encoder_max_length,
+            pad_token_id=encoder_pad_token_id,
+            token_type_vocab_size=encoder_token_type_vocab_size,
+            n_heads=encoder_n_heads,
+            dim_feedforward=encoder_dim_feedforward,
+            num_layers=encoder_num_layers,
+            dropout=encoder_dropout,
+            use_embedding_layer_norm=encoder_use_embedding_layer_norm,
+            pos_embedding_type=encoder_pos_embedding_type,
+            activation_name=encoder_activation_name,
+            ln_eps=encoder_ln_eps,
+            use_token_type_embeddings=encoder_use_token_type_embeddings,
             vocab_size=encoder_vocab_size,
         )
         self.decoder = decoder_class(
-            **kwargs,
+            d_model=d_model,
             vocab_size=decoder_vocab_size,
+            max_length=decoder_max_length,
+            pad_token_id=decoder_pad_token_id,
+            token_type_vocab_size=decoder_token_type_vocab_size,
+            n_heads=decoder_n_heads,
+            dim_feedforward=decoder_dim_feedforward,
+            num_layers=decoder_num_layers,
+            dropout=decoder_dropout,
+            use_embedding_layer_norm=decoder_use_embedding_layer_norm,
+            pos_embedding_type=decoder_pos_embedding_type,
+            activation_name=decoder_activation_name,
+            ln_eps=decoder_ln_eps,
         )
-        self.lm_head = nn.Linear(
-            kwargs["d_model"], decoder_vocab_size, bias=False
-        )
+        self.lm_head = nn.Linear(d_model, decoder_vocab_size, bias=False)
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
         if share_encoder_decoder_embeddings:
@@ -53,9 +94,9 @@ class Transformer(nn.Module):
                 self.decoder.embedding.token_embedding.weight
             )
         self.loss_function = nn.CrossEntropyLoss(
-            ignore_index=kwargs["pad_token_id"]
+            ignore_index=decoder_pad_token_id
         )
-        self.pad_token_id = kwargs["pad_token_id"]
+        self.pad_token_id = decoder_pad_token_id
 
     def forward(
         self,

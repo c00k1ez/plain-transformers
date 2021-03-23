@@ -28,30 +28,98 @@ class MultimodalTransformer(nn.Module):
         first_encoder_class: Callable,
         second_encoder_class: Callable,
         decoder_class: Callable,
+        d_model: int,
         first_encoder_vocab_size: int,
+        first_encoder_max_length: int,
+        first_encoder_pad_token_id: int,
+        first_encoder_token_type_vocab_size: int,
+        first_encoder_n_heads: int,
+        first_encoder_dim_feedforward: int,
+        first_encoder_num_layers: int,
         second_encoder_vocab_size: int,
+        second_encoder_max_length: int,
+        second_encoder_pad_token_id: int,
+        second_encoder_token_type_vocab_size: int,
+        second_encoder_n_heads: int,
+        second_encoder_dim_feedforward: int,
+        second_encoder_num_layers: int,
+        decoder_max_length: int,
         decoder_vocab_size: int,
-        use_token_type_embeddings: Optional[bool] = False,
+        decoder_pad_token_id: int,
+        decoder_token_type_vocab_size: int,
+        decoder_n_heads: int,
+        decoder_dim_feedforward: int,
+        decoder_num_layers: int,
+        decoder_use_embedding_layer_norm: Optional[bool] = True,
+        decoder_pos_embedding_type: Optional[str] = "embedding",
+        decoder_activation_name: Optional[str] = "gelu",
+        decoder_ln_eps: Optional[float] = 1e-12,
+        decoder_dropout: Optional[float] = 0.1,
+        first_encoder_dropout: Optional[float] = 0.1,
+        first_encoder_use_embedding_layer_norm: Optional[bool] = True,
+        first_encoder_pos_embedding_type: Optional[str] = "embedding",
+        first_encoder_activation_name: Optional[str] = "gelu",
+        first_encoder_ln_eps: Optional[float] = 1e-12,
+        first_encoder_use_token_type_embeddings: Optional[bool] = True,
+        second_encoder_dropout: Optional[float] = 0.1,
+        second_encoder_use_embedding_layer_norm: Optional[bool] = True,
+        second_encoder_pos_embedding_type: Optional[str] = "embedding",
+        second_encoder_activation_name: Optional[str] = "gelu",
+        second_encoder_ln_eps: Optional[float] = 1e-12,
+        second_encoder_use_token_type_embeddings: Optional[bool] = True,
         share_decoder_head_weights: Optional[bool] = True,
         share_encoder_decoder_embeddings: Optional[bool] = False,
         share_encoder_embeddings: Optional[bool] = False,
-        **kwargs
     ) -> None:
         super(MultimodalTransformer, self).__init__()
         self.first_encoder = first_encoder_class(
-            **kwargs,
-            use_token_type_embeddings=use_token_type_embeddings,
-            vocab_size=first_encoder_vocab_size
+            max_length=first_encoder_max_length,
+            pad_token_id=first_encoder_pad_token_id,
+            token_type_vocab_size=first_encoder_token_type_vocab_size,
+            n_heads=first_encoder_n_heads,
+            dim_feedforward=first_encoder_dim_feedforward,
+            num_layers=first_encoder_num_layers,
+            dropout=first_encoder_dropout,
+            use_embedding_layer_norm=first_encoder_use_embedding_layer_norm,
+            pos_embedding_type=first_encoder_pos_embedding_type,
+            activation_name=first_encoder_activation_name,
+            ln_eps=first_encoder_ln_eps,
+            use_token_type_embeddings=first_encoder_use_token_type_embeddings,
+            vocab_size=first_encoder_vocab_size,
         )
         self.second_encoder = second_encoder_class(
-            **kwargs,
-            use_token_type_embeddings=use_token_type_embeddings,
-            vocab_size=second_encoder_vocab_size
+            max_length=second_encoder_max_length,
+            pad_token_id=second_encoder_pad_token_id,
+            token_type_vocab_size=second_encoder_token_type_vocab_size,
+            n_heads=second_encoder_n_heads,
+            dim_feedforward=second_encoder_dim_feedforward,
+            num_layers=second_encoder_num_layers,
+            dropout=second_encoder_dropout,
+            use_embedding_layer_norm=second_encoder_use_embedding_layer_norm,
+            pos_embedding_type=second_encoder_pos_embedding_type,
+            activation_name=second_encoder_activation_name,
+            ln_eps=second_encoder_ln_eps,
+            use_token_type_embeddings=second_encoder_use_token_type_embeddings,
+            vocab_size=second_encoder_vocab_size,
         )
 
-        self.decoder = decoder_class(**kwargs, vocab_size=decoder_vocab_size)
+        self.decoder = decoder_class(
+            d_model=d_model,
+            vocab_size=decoder_vocab_size,
+            max_length=decoder_max_length,
+            pad_token_id=decoder_pad_token_id,
+            token_type_vocab_size=decoder_token_type_vocab_size,
+            n_heads=decoder_n_heads,
+            dim_feedforward=decoder_dim_feedforward,
+            num_layers=decoder_num_layers,
+            dropout=decoder_dropout,
+            use_embedding_layer_norm=decoder_use_embedding_layer_norm,
+            pos_embedding_type=decoder_pos_embedding_type,
+            activation_name=decoder_activation_name,
+            ln_eps=decoder_ln_eps,
+        )
         self.lm_head = nn.Linear(
-            kwargs["d_model"], decoder_vocab_size, bias=False
+            d_model, decoder_vocab_size, bias=False
         )
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
@@ -67,9 +135,9 @@ class MultimodalTransformer(nn.Module):
                 self.second_encoder.embedding.token_embedding.weight
             )
         self.loss_function = nn.CrossEntropyLoss(
-            ignore_index=kwargs["pad_token_id"]
+            ignore_index=decoder_pad_token_id
         )
-        self.pad_token_id = kwargs["pad_token_id"]
+        self.pad_token_id = decoder_pad_token_id
 
     def forward(
         self,
