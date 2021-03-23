@@ -2,7 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .common_layers import FFN, MultiHeadAttention, TransformerEmbedding, TransformerDecoder
+from .common_layers import (
+    FFN,
+    MultiHeadAttention,
+    TransformerEmbedding,
+    TransformerDecoder,
+)
 from .utils import create_attention_mask
 
 
@@ -15,22 +20,20 @@ class PostLNDecoderLayer(nn.Module):
         dropout=0.1,
         activation_name="gelu",
         ln_eps=1e-12,
-        context_len=512
+        context_len=512,
     ):
         super(PostLNDecoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(
             d_model=d_model,
             n_heads=n_heads,
             dropout=dropout,
-            context_len=context_len
+            context_len=context_len,
         )
         self.self_attn_merge_matrix = nn.Linear(d_model, d_model)
         self.post_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
         self.cross_attention = MultiHeadAttention(
-            d_model=d_model,
-            n_heads=n_heads,
-            dropout=dropout
+            d_model=d_model, n_heads=n_heads, dropout=dropout
         )
         self.cross_attn_merge_matrix = nn.Linear(d_model, d_model)
         self.post_cross_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
@@ -39,7 +42,7 @@ class PostLNDecoderLayer(nn.Module):
             d_model=d_model,
             dim_feedforward=dim_feedforward,
             dropout=dropout,
-            activation_name=activation_name
+            activation_name=activation_name,
         )
         self.post_ffn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
@@ -49,7 +52,7 @@ class PostLNDecoderLayer(nn.Module):
         encoder_hidden_state,
         attention_mask=None,
         encoder_attention_mask=None,
-        get_attention_scores=False
+        get_attention_scores=False,
     ):
         attn_scores = []
         self_attn_block = self.self_attention(
@@ -57,10 +60,12 @@ class PostLNDecoderLayer(nn.Module):
             key=hidden,
             value=hidden,
             attention_mask=attention_mask,
-            get_attention_scores=get_attention_scores
+            get_attention_scores=get_attention_scores,
         )
         if get_attention_scores:
-            attn_scores = [self_attn_block[1], ]
+            attn_scores = [
+                self_attn_block[1],
+            ]
         self_attn_block = self_attn_block[0]
         self_attn_block = self.self_attn_merge_matrix(self_attn_block)
         self_attn_block = self_attn_block + hidden
@@ -68,10 +73,10 @@ class PostLNDecoderLayer(nn.Module):
 
         cross_attn_block = self.cross_attention(
             query=self_attn_block,
-            key=encoder_hidden_state['key'],
-            value=encoder_hidden_state['value'],
+            key=encoder_hidden_state["key"],
+            value=encoder_hidden_state["value"],
             attention_mask=encoder_attention_mask,
-            get_attention_scores=get_attention_scores
+            get_attention_scores=get_attention_scores,
         )
         if get_attention_scores:
             attn_scores.append(cross_attn_block[1])
@@ -104,9 +109,9 @@ class PostLNTransformerDecoder(nn.Module):
         dim_feedforward,
         num_layers,
         use_embedding_layer_norm=False,
-        pos_embedding_type='embedding',
+        pos_embedding_type="embedding",
         activation_name="gelu",
-        ln_eps=1e-12
+        ln_eps=1e-12,
     ):
         super(PostLNTransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
@@ -119,7 +124,7 @@ class PostLNTransformerDecoder(nn.Module):
             use_layer_norm=use_embedding_layer_norm,
             use_token_type_embeddings=False,
             ln_eps=ln_eps,
-            pos_embedding_type=pos_embedding_type
+            pos_embedding_type=pos_embedding_type,
         )
 
         self.decoder = TransformerDecoder(
@@ -131,7 +136,7 @@ class PostLNTransformerDecoder(nn.Module):
             dropout=dropout,
             activation_name=activation_name,
             ln_eps=ln_eps,
-            context_len=max_length
+            context_len=max_length,
         )
 
     def forward(
@@ -140,19 +145,19 @@ class PostLNTransformerDecoder(nn.Module):
         encoder_hidden_state,
         attention_mask=None,
         encoder_attention_mask=None,
-        get_attention_scores=False
+        get_attention_scores=False,
     ):
         attention_mask = create_attention_mask(
             attention_mask=attention_mask,
             input_shape=input_ids.shape,
-            device=input_ids.device
+            device=input_ids.device,
         )
 
         encoder_attention_mask = create_attention_mask(
             attention_mask=encoder_attention_mask,
-            input_shape=encoder_hidden_state['key'].shape[:-1],
-            device=encoder_hidden_state['key'].device,
-            src_size=input_ids.shape[-1]
+            input_shape=encoder_hidden_state["key"].shape[:-1],
+            device=encoder_hidden_state["key"].device,
+            src_size=input_ids.shape[-1],
         )
 
         embeddings = self.embedding(input_ids)
@@ -162,7 +167,7 @@ class PostLNTransformerDecoder(nn.Module):
             encoder_hidden_state=encoder_hidden_state,
             attention_mask=attention_mask,
             encoder_attention_mask=encoder_attention_mask,
-            get_attention_scores=get_attention_scores
+            get_attention_scores=get_attention_scores,
         )
 
         return hidden

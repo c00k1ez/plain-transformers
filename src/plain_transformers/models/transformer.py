@@ -24,15 +24,21 @@ class Transformer(nn.Module):
             vocab_size=encoder_vocab_size
         )
         self.decoder = decoder_class(**kwargs, vocab_size=decoder_vocab_size)
-        self.lm_head = nn.Linear(kwargs['d_model'], decoder_vocab_size, bias=False)
+        self.lm_head = nn.Linear(
+            kwargs["d_model"],
+            decoder_vocab_size,
+            bias=False
+        )
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
         if share_encoder_decoder_embeddings:
-            self.encoder.embedding.token_embedding.weight = self.decoder.embedding.token_embedding.weight
+            self.encoder.embedding.token_embedding.weight = (
+                self.decoder.embedding.token_embedding.weight
+            )
         self.loss_function = nn.CrossEntropyLoss(
-            ignore_index=kwargs['pad_token_id']
+            ignore_index=kwargs["pad_token_id"]
         )
-        self.pad_token_id = kwargs['pad_token_id']
+        self.pad_token_id = kwargs["pad_token_id"]
 
     def forward(
         self,
@@ -44,7 +50,7 @@ class Transformer(nn.Module):
         get_attention_scores=False,
         cached_encoder_state=None,
         return_encoder_state=False,
-        compute_loss=False
+        compute_loss=False,
     ):
         encoder_state = None
         attn_scores = {}
@@ -55,34 +61,43 @@ class Transformer(nn.Module):
                 input_ids=input_ids,
                 attention_mask=encoder_attention_mask,
                 token_type_ids=token_type_ids,
-                get_attention_scores=get_attention_scores
+                get_attention_scores=get_attention_scores,
             )
             if get_attention_scores:
-                attn_scores['encoder'] = encoder_state[1]
+                attn_scores["encoder"] = encoder_state[1]
 
-            encoder_state = {'key': encoder_state[0], 'value': encoder_state[0]}
+            encoder_state = {
+                "key": encoder_state[0],
+                "value": encoder_state[0]
+            }
         hidden = self.decoder(
             input_ids=labels,
             encoder_hidden_state=encoder_state,
             attention_mask=decoder_attention_mask,
             encoder_attention_mask=encoder_attention_mask,
-            get_attention_scores=get_attention_scores
+            get_attention_scores=get_attention_scores,
         )
         if get_attention_scores:
-            attn_scores['decoder'] = hidden[1]
+            attn_scores["decoder"] = hidden[1]
         hidden = hidden[0]
         raw_probs = self.lm_head(hidden)
 
-        output = {
-            'lm_probs': torch.softmax(raw_probs, dim=-1)
-        }
+        output = {"lm_probs": torch.softmax(raw_probs, dim=-1)}
         if return_encoder_state:
-            output['encoder_hidden_state'] = encoder_state
+            output["encoder_hidden_state"] = encoder_state
         if compute_loss:
             batch_size = labels.shape[0]
-            labels = torch.cat([
-                labels[:, 1:],
-                torch.LongTensor([[self.pad_token_id]], device=labels.device).repeat(batch_size, 1)
-            ], dim=-1)
-            output['loss_val'] = self.loss_function(raw_probs.permute(0, 2, 1), labels)
+            labels = torch.cat(
+                [
+                    labels[:, 1:],
+                    torch.LongTensor(
+                        [[self.pad_token_id]], device=labels.device
+                    ).repeat(batch_size, 1),
+                ],
+                dim=-1,
+            )
+            output["loss_val"] = self.loss_function(
+                raw_probs.permute(0, 2, 1),
+                labels
+            )
         return output

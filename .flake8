@@ -1,0 +1,8 @@
+[flake8]
+ignore = D203,F401,E203
+exclude =
+    # No need to traverse our git directory
+    .git,
+    # There's no value in checking cache directories
+    __pycache__
+max-complexity = 10
