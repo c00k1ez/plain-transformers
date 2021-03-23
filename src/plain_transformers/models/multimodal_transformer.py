@@ -61,7 +61,7 @@ class MultimodalTransformer(nn.Module):
         second_encoder_input_ids,
         labels,
         decoder_attention_mask=None,
-        fisrt_encoder_attention_mask=None,
+        first_encoder_attention_mask=None,
         second_encoder_attention_mask=None,
         get_attention_scores=False,
         cached_encoder_state=None,
@@ -75,7 +75,7 @@ class MultimodalTransformer(nn.Module):
         else:
             first_encoder_state = self.first_encoder(
                 input_ids=first_encoder_input_ids,
-                attention_mask=fisrt_encoder_attention_mask,
+                attention_mask=first_encoder_attention_mask,
                 token_type_ids=None,
                 get_attention_scores=get_attention_scores,
             )
@@ -105,7 +105,7 @@ class MultimodalTransformer(nn.Module):
             first_encoder_hidden_state=first_encoder_state,
             second_encoder_hidden_state=second_encoder_state,
             attention_mask=decoder_attention_mask,
-            fisrt_encoder_attention_mask=fisrt_encoder_attention_mask,
+            first_encoder_attention_mask=first_encoder_attention_mask,
             second_encoder_attention_mask=second_encoder_attention_mask,
             get_attention_scores=get_attention_scores,
         )
