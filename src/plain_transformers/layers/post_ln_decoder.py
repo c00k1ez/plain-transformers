@@ -16,7 +16,7 @@ class PostLNDecoderLayer(nn.Module):
             activation_name="gelu",
             ln_eps=1e-12,
             context_len=512
-        ):
+    ):
         super(PostLNDecoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(
             d_model=d_model,
@@ -50,7 +50,7 @@ class PostLNDecoderLayer(nn.Module):
             attention_mask=None,
             encoder_attention_mask=None,
             get_attention_scores=False
-        ):
+    ):
         attn_scores = []
         self_attn_block = self.self_attention(
             query=hidden,
@@ -85,9 +85,9 @@ class PostLNDecoderLayer(nn.Module):
         ffn_block = ffn_block + cross_attn_block
         ffn_block = self.post_ffn_ln(ffn_block)
 
-        output = (ffn_block, )
+        output = (ffn_block,)
         if get_attention_scores:
-            output = output + (attn_scores, )
+            output = output + (attn_scores,)
         return output
 
 
@@ -107,7 +107,7 @@ class PostLNTransformerDecoder(nn.Module):
             pos_embedding_type='embedding',
             activation_name="gelu",
             ln_eps=1e-12
-        ):
+    ):
         super(PostLNTransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
             vocab_size=vocab_size,
@@ -141,7 +141,7 @@ class PostLNTransformerDecoder(nn.Module):
             attention_mask=None,
             encoder_attention_mask=None,
             get_attention_scores=False
-        ):
+    ):
         attention_mask = create_attention_mask(
             attention_mask=attention_mask,
             input_shape=input_ids.shape,
@@ -166,4 +166,3 @@ class PostLNTransformerDecoder(nn.Module):
         )
 
         return hidden
-
