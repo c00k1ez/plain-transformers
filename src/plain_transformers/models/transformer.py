@@ -59,6 +59,7 @@ class Transformer(nn.Module):
     ) -> None:
         super(Transformer, self).__init__()
         self.encoder = encoder_class(
+            d_model=d_model,
             max_length=encoder_max_length,
             pad_token_id=encoder_pad_token_id,
             token_type_vocab_size=encoder_token_type_vocab_size,
