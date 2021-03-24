@@ -60,8 +60,11 @@ class BaseSampler(object):
         max_length=50,
         second_input_text=None,
         decoder_input_text=None,
+        device=None,
         **kwargs,
     ):
+        if device is None:
+            device = torch.device('cpu')
         encoder_input_ids = torch.LongTensor(
             self.first_encoder_tokenizer.encode(
                 [input_text],
@@ -69,7 +72,7 @@ class BaseSampler(object):
                 eos=True,
                 output_type=yttm.OutputType.ID,
             ),
-            device=self.model.device,
+            device=device,
         )
         second_encoder_input_ids = None
         if second_input_text is not None:
@@ -80,7 +83,7 @@ class BaseSampler(object):
                     eos=True,
                     output_type=yttm.OutputType.ID,
                 ),
-                device=self.model.device,
+                device=device,
             )
 
         labels = None
@@ -92,14 +95,14 @@ class BaseSampler(object):
                     eos=True,
                     output_type=yttm.OutputType.ID,
                 ),
-                device=self.model.device,
+                device=device,
             )
         else:
             labels = torch.LongTensor(
                 [
                     self.decoder_tokenizer.pad_id,
                 ],
-                device=self.model.device,
+                device=device,
             )
 
         args = {

@@ -28,7 +28,7 @@ class NucleusSampler(BaseSampler):
         top_k, top_p = None, None
         if "top_k" in kwargs:
             top_k = kwargs["top_k"]
-        if "top_p" in kwargs["top_p"]:
+        if "top_p" in kwargs:
             top_p = kwargs["top_p"]
         assert (top_k is None and top_p is not None) or (
             top_k is not None and top_p is None
