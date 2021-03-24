@@ -65,38 +65,50 @@ class BaseSampler(object):
     ):
         if device is None:
             device = torch.device('cpu')
-        encoder_input_ids = torch.LongTensor(
-            self.first_encoder_tokenizer.encode(
-                [input_text],
-                bos=True,
-                eos=True,
-                output_type=yttm.OutputType.ID,
-            ),
-            device=device,
-        )
-        second_encoder_input_ids = None
-        if second_input_text is not None:
-            second_encoder_input_ids = torch.LongTensor(
-                self.second_encoder_tokenizer.encode(
-                    [second_input_text],
+        if isinstance(input_text, torch.Tensor):
+            assert len(input_text.shape) == 2
+            encoder_input_ids = input_text.to(device)
+        else:
+            encoder_input_ids = torch.LongTensor(
+                self.first_encoder_tokenizer.encode(
+                    [input_text],
                     bos=True,
                     eos=True,
                     output_type=yttm.OutputType.ID,
                 ),
                 device=device,
             )
+        second_encoder_input_ids = None
+        if second_input_text is not None:
+            if isinstance(second_input_text, torch.Tensor):
+                assert len(second_input_text.shape) == 2
+                second_encoder_input_ids = second_input_text.to(device)
+            else:
+                second_encoder_input_ids = torch.LongTensor(
+                    self.second_encoder_tokenizer.encode(
+                        [second_input_text],
+                        bos=True,
+                        eos=True,
+                        output_type=yttm.OutputType.ID,
+                    ),
+                    device=device,
+                )
 
         labels = None
         if decoder_input_text is not None:
-            labels = torch.LongTensor(
-                self.decoder_tokenizer.encode(
-                    [decoder_input_text],
-                    bos=True,
-                    eos=True,
-                    output_type=yttm.OutputType.ID,
-                ),
-                device=device,
-            )
+            if isinstance(decoder_input_text, torch.Tensor):
+                assert len(decoder_input_text.shape) == 2
+                labels = decoder_input_text.to(device)
+            else:
+                labels = torch.LongTensor(
+                    self.decoder_tokenizer.encode(
+                        [decoder_input_text],
+                        bos=True,
+                        eos=True,
+                        output_type=yttm.OutputType.ID,
+                    ),
+                    device=device,
+                )
         else:
             labels = torch.LongTensor(
                 [[
