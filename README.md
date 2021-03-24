@@ -84,6 +84,6 @@ train(model, ...)
 ```
 **Step six**: initialize Sampler and generate model answer;
 ```
-sampler = NucleusSampler(model, encoder_tokenizer=(tokenizer, tokenizer), decoder_tokenizer=tokenizer)
+sampler = NucleusSampler(model, encoder_tokenizer=(encoder_tokenizer, encoder_tokenizer), decoder_tokenizer=decoder_tokenizer)
 sampler.generate('Hello Bob, what are you doing?', second_input_text='Fine, thanks!', top_k=5)
 ```
