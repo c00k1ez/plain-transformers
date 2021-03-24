@@ -117,9 +117,7 @@ class MultimodalTransformer(nn.Module):
             activation_name=decoder_activation_name,
             ln_eps=decoder_ln_eps,
         )
-        self.lm_head = nn.Linear(
-            d_model, decoder_vocab_size, bias=False
-        )
+        self.lm_head = nn.Linear(d_model, decoder_vocab_size, bias=False)
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
         if share_encoder_decoder_embeddings:
@@ -152,6 +150,7 @@ class MultimodalTransformer(nn.Module):
         ] = None,
         return_encoder_state: Optional[bool] = False,
         compute_loss: Optional[bool] = False,
+        get_logits: Optional[bool] = False,
     ) -> Dict[
         str,
         Union[
@@ -206,7 +205,11 @@ class MultimodalTransformer(nn.Module):
         hidden = hidden[0]
         raw_probs = self.lm_head(hidden)
 
-        output = {"lm_probs": torch.softmax(raw_probs, dim=-1)}
+        output = {
+            "lm_probs": torch.softmax(raw_probs, dim=-1)
+            if not get_logits
+            else raw_probs
+        }
         if return_encoder_state:
             output["encoder_hidden_state"] = (
                 first_encoder_state,

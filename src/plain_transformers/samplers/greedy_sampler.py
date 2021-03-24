@@ -12,4 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .yttm_tokenizer import BPEWrapper
+import torch
+
+from .base_sampler import BaseSampler
+
+
+class GreedySampler(BaseSampler):
+    def __init__(self, *args, **kwargs) -> None:
+        super(GreedySampler, self).__init__()
+
+    @torch.no_grad
+    def sample(
+        self, logits: torch.Tensor, temperatype: float, **kwargs
+    ) -> torch.Tensor:
+        probs = torch.softmax(logits / temperatype, dim=-1)
+        max_val = probs.max(dim=-1)[1].unsqueeze(-1)
+        return max_val

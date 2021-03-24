@@ -108,6 +108,7 @@ class Transformer(nn.Module):
         cached_encoder_state: Optional[Dict[str, torch.Tensor]] = None,
         return_encoder_state: Optional[bool] = False,
         compute_loss: Optional[bool] = False,
+        get_logits: Optional[bool] = False,
     ) -> Dict[str, Union[torch.Tensor, Dict[str, torch.Tensor]]]:
         encoder_state = None
         attn_scores = {}
@@ -139,7 +140,11 @@ class Transformer(nn.Module):
         hidden = hidden[0]
         raw_probs = self.lm_head(hidden)
 
-        output = {"lm_probs": torch.softmax(raw_probs, dim=-1)}
+        output = {
+            "lm_probs": torch.softmax(raw_probs, dim=-1)
+            if not get_logits
+            else raw_probs
+        }
         if return_encoder_state:
             output["encoder_hidden_state"] = encoder_state
         if compute_loss:
