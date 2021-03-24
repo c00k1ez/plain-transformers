@@ -18,6 +18,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from plain_transformers.losses import LabelSmoothingLoss
+
 
 # TODO: add label smoothing loss
 class Transformer(nn.Module):
@@ -53,6 +55,7 @@ class Transformer(nn.Module):
         encoder_use_token_type_embeddings: Optional[bool] = True,
         share_decoder_head_weights: Optional[bool] = True,
         share_encoder_decoder_embeddings: Optional[bool] = False,
+        label_smoothing: Optional[float] = 0.,
     ) -> None:
         super(Transformer, self).__init__()
         self.encoder = encoder_class(
@@ -92,8 +95,9 @@ class Transformer(nn.Module):
             self.encoder.embedding.token_embedding.weight = (
                 self.decoder.embedding.token_embedding.weight
             )
-        self.loss_function = nn.CrossEntropyLoss(
-            ignore_index=decoder_pad_token_id
+        self.loss_function = LabelSmoothingLoss(
+            smoothing=label_smoothing,
+            ignore_index=decoder_pad_token_id,
         )
         self.pad_token_id = decoder_pad_token_id
 
@@ -159,6 +163,6 @@ class Transformer(nn.Module):
                 dim=-1,
             )
             output["loss_val"] = self.loss_function(
-                raw_probs.permute(0, 2, 1), labels
+                raw_probs.view(-1, raw_probs.shape[-1]), labels.view(-1)
             )
         return output

@@ -18,6 +18,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from plain_transformers.losses import LabelSmoothingLoss
+
 
 # TODO: add label smoothing loss
 # TODO: write more complex solution for embedding sharing
@@ -69,6 +71,7 @@ class MultimodalTransformer(nn.Module):
         share_decoder_head_weights: Optional[bool] = True,
         share_encoder_decoder_embeddings: Optional[bool] = False,
         share_encoder_embeddings: Optional[bool] = False,
+        label_smoothing: Optional[float] = 0.,
     ) -> None:
         super(MultimodalTransformer, self).__init__()
         self.first_encoder = first_encoder_class(
@@ -133,8 +136,9 @@ class MultimodalTransformer(nn.Module):
             self.first_encoder.embedding.token_embedding.weight = (
                 self.second_encoder.embedding.token_embedding.weight
             )
-        self.loss_function = nn.CrossEntropyLoss(
-            ignore_index=decoder_pad_token_id
+        self.loss_function = LabelSmoothingLoss(
+            smoothing=label_smoothing,
+            ignore_index=decoder_pad_token_id,
         )
         self.pad_token_id = decoder_pad_token_id
 
@@ -229,6 +233,6 @@ class MultimodalTransformer(nn.Module):
                 dim=-1,
             )
             output["loss_val"] = self.loss_function(
-                raw_probs.permute(0, 2, 1), labels
+                raw_probs.view(-1, raw_probs.shape[-1]), labels.view(-1)
             )
         return output
