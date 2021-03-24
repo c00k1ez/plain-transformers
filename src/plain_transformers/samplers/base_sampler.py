@@ -99,9 +99,9 @@ class BaseSampler(object):
             )
         else:
             labels = torch.LongTensor(
-                [
+                [[
                     self.decoder_tokenizer.pad_id,
-                ],
+                ]],
                 device=device,
             )
 
@@ -126,7 +126,7 @@ class BaseSampler(object):
         get_cached_encoder_state = False
         for token_num in range(max_length):
             model_out = self.model(**args)
-            logits = model_out["lm_probs"]
+            logits = model_out["lm_probs"][:, -1, :]
             next_token = self.sample(logits, temperatype, **kwargs)
             if not get_cached_encoder_state:
                 args["cached_encoder_state"] = model_out[
@@ -143,6 +143,6 @@ class BaseSampler(object):
                 self.decoder_tokenizer.bos_id,
                 self.decoder_tokenizer.eos_id,
             ),
-        )
+        )[0]
 
         return generated_seq
