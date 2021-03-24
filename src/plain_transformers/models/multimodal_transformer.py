@@ -72,6 +72,7 @@ class MultimodalTransformer(nn.Module):
     ) -> None:
         super(MultimodalTransformer, self).__init__()
         self.first_encoder = first_encoder_class(
+            d_model=d_model,
             max_length=first_encoder_max_length,
             pad_token_id=first_encoder_pad_token_id,
             token_type_vocab_size=first_encoder_token_type_vocab_size,
@@ -87,6 +88,7 @@ class MultimodalTransformer(nn.Module):
             vocab_size=first_encoder_vocab_size,
         )
         self.second_encoder = second_encoder_class(
+            d_model=d_model,
             max_length=second_encoder_max_length,
             pad_token_id=second_encoder_pad_token_id,
             token_type_vocab_size=second_encoder_token_type_vocab_size,

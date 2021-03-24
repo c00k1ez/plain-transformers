@@ -19,9 +19,9 @@ from .base_sampler import BaseSampler
 
 class GreedySampler(BaseSampler):
     def __init__(self, *args, **kwargs) -> None:
-        super(GreedySampler, self).__init__()
+        super(GreedySampler, self).__init__(*args, **kwargs)
 
-    @torch.no_grad
+    @torch.no_grad()
     def sample(
         self, logits: torch.Tensor, temperatype: float, **kwargs
     ) -> torch.Tensor:

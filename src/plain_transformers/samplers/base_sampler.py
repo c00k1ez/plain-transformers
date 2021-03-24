@@ -46,13 +46,13 @@ class BaseSampler(object):
         if share_encoder_decoder_tokenizers:
             self.decoder_tokenizer = self.first_encoder_tokenizer
 
-    @torch.no_grad
+    @torch.no_grad()
     def sample(
         self, logits: torch.Tensor, temperatype: float, **kwargs
     ) -> torch.Tensor:
         raise NotImplementedError("You have to implement this method")
 
-    @torch.no_grad
+    @torch.no_grad()
     def generate(
         self,
         input_text,
