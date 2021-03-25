@@ -25,9 +25,9 @@ class NoamScheduler(_LRScheduler):
         d_model: int,
         warmup_steps: Optional[int] = 4000,
     ) -> None:
-        super(NoamScheduler, self).__init__(optimizer)
         self.d_model = d_model
         self.warmup_steps = warmup_steps
+        super(NoamScheduler, self).__init__(optimizer)
 
     def get_lr(self) -> List[float]:
         last_step = max(1, self.last_epoch)
