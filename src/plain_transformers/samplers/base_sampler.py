@@ -75,9 +75,8 @@ class BaseSampler(object):
                     bos=True,
                     eos=True,
                     output_type=yttm.OutputType.ID,
-                ),
-                device=device,
-            )
+                )
+            ).to(device)
         second_encoder_input_ids = None
         if second_input_text is not None:
             if isinstance(second_input_text, torch.Tensor):
@@ -90,9 +89,8 @@ class BaseSampler(object):
                         bos=True,
                         eos=True,
                         output_type=yttm.OutputType.ID,
-                    ),
-                    device=device,
-                )
+                    )
+                ).to(device)
 
         labels = None
         if decoder_input_text is not None:
@@ -106,16 +104,14 @@ class BaseSampler(object):
                         bos=True,
                         eos=True,
                         output_type=yttm.OutputType.ID,
-                    ),
-                    device=device,
-                )
+                    )
+                ).to(device)
         else:
             labels = torch.LongTensor(
                 [[
                     self.decoder_tokenizer.pad_id,
-                ]],
-                device=device,
-            )
+                ]]
+            ).to(device)
 
         args = {
             "get_logits": True,
@@ -132,11 +128,11 @@ class BaseSampler(object):
         else:
             args = {
                 **args,
-                "encoder_input_ids": encoder_input_ids,
+                "input_ids": encoder_input_ids,
             }
 
         get_cached_encoder_state = False
-        for token_num in range(max_length):
+        while args["labels"].shape[-1] < max_length:
             model_out = self.model(**args)
             logits = model_out["lm_probs"][:, -1, :]
             next_token = self.sample(logits, temperatype, **kwargs)

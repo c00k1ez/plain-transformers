@@ -158,8 +158,8 @@ class Transformer(nn.Module):
                 [
                     labels[:, 1:],
                     torch.LongTensor(
-                        [[self.pad_token_id]], device=labels.device
-                    ).repeat(batch_size, 1),
+                        [[self.pad_token_id]]
+                    ).repeat(batch_size, 1).type_as(labels),
                 ],
                 dim=-1,
             )
