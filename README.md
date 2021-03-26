@@ -1,6 +1,7 @@
 # Simple way to use transformer models
 Multimodal transformer example with two tokenizers:
 
+## Usage
 **Step one**: import model and some usefull staff;
 ```
 import torch
@@ -87,3 +88,5 @@ train(model, ...)
 sampler = NucleusSampler(model, encoder_tokenizer=(encoder_tokenizer, encoder_tokenizer), decoder_tokenizer=decoder_tokenizer)
 sampler.generate('Hello Bob, what are you doing?', second_input_text='Fine, thanks!', top_k=5)
 ```
+## Example
+You can find working example of NMT [here](https://colab.research.google.com/drive/1WA_CcmDD-O51foBvSOMKT4sZD-zuzQwA?usp=sharing).
