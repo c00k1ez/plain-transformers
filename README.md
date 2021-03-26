@@ -1,7 +1,9 @@
 # Simple way to use transformer models
-Multimodal transformer example with two tokenizers:
+## Installation
+```pip install git+https://github.com/c00k1ez/plain_transformers.git```
 
 ## Usage
+Multimodal transformer example with two tokenizers:
 **Step one**: import model and some usefull staff;
 ```
 import torch
