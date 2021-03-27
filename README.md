@@ -6,7 +6,7 @@
 Multimodal transformer example with two tokenizers:
 
 **Step one**: import model and some usefull staff;
-```
+```python
 import torch
 
 from plain_transformers.models import MultimodalTransformer
@@ -20,7 +20,7 @@ from plain_transformers.samplers.nucleus_sampler import NucleusSampler
 import youtokentome as yttm
 ```
 **Step two**: train and load tokenizers;
-```
+```python
 # train your encoder tokenizer
 yttm.BPE.train(..., model='encoder_tokenizer.model')
 # train your decoder tokenizer
@@ -31,7 +31,7 @@ encoder_tokenizer = BPEWrapper(model='encoder_tokenizer.model')
 decoder_tokenizer = BPEWrapper(model='decoder_tokenizer.model')
 ```
 **Step three**: init out model configuration;
-```
+```python
 cfg = {
     'd_model': 768,
     'first_encoder': {
@@ -66,7 +66,7 @@ cfg = {
 }
 ```
 **Step four**: initialize model and apply weight initialisation (with default parameter ```std=0.02```);
-```
+```python
 model = MultimodalTransformer(
     PostLNTransformerEncoder,
     PostLNTransformerEncoder,
@@ -83,11 +83,11 @@ model = MultimodalTransformer(
 model.apply(normal_initialization)
 ```
 **Step five**: train our model like ordinary seq2seq;
-```
+```python
 train(model, ...)
 ```
 **Step six**: initialize Sampler and generate model answer;
-```
+```python
 sampler = NucleusSampler(model, encoder_tokenizer=(encoder_tokenizer, encoder_tokenizer), decoder_tokenizer=decoder_tokenizer)
 sampler.generate('Hello Bob, what are you doing?', second_input_text='Fine, thanks!', top_k=5)
 ```
