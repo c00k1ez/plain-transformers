@@ -35,7 +35,18 @@ def create_attention_mask(
 
 
 def act_to_func(act_name: str) -> Callable:
-    acts = {"gelu": F.gelu, "relu": F.relu}
+    acts = {
+        "gelu": F.gelu,
+        "relu": F.relu,
+        "relu6": F.relu6,
+        "elu": F.elu,
+        "selu": F.selu,
+        "celu": F.celu,
+        "leaky_relu": F.leaky_relu,
+        "glu": F.glu,
+        "tanh": F.tanh,
+        "silu": F.silu,
+    }
     if act_name in acts:
         return acts[act_name]
     else:

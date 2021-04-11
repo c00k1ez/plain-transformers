@@ -128,6 +128,7 @@ class PostLNTransformerDecoder(nn.Module):
         pos_embedding_type: Optional[str] = "embedding",
         activation_name: Optional[str] = "gelu",
         ln_eps: Optional[float] = 1e-12,
+        layerdrop_threshold: Optional[float] = 0.0,
     ) -> None:
         super(PostLNTransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
@@ -138,7 +139,6 @@ class PostLNTransformerDecoder(nn.Module):
             token_type_vocab_size=token_type_vocab_size,
             dropout=dropout,
             use_layer_norm=use_embedding_layer_norm,
-            use_token_type_embeddings=False,
             ln_eps=ln_eps,
             pos_embedding_type=pos_embedding_type,
         )
@@ -153,6 +153,7 @@ class PostLNTransformerDecoder(nn.Module):
             activation_name=activation_name,
             ln_eps=ln_eps,
             context_len=max_length,
+            layerdrop_threshold=layerdrop_threshold,
         )
 
     def forward(
@@ -330,6 +331,7 @@ class PostLNMultimodalTransformerDecoder(nn.Module):
         pos_embedding_type: Optional[str] = "embedding",
         activation_name: Optional[str] = "gelu",
         ln_eps: Optional[float] = 1e-12,
+        layerdrop_threshold: Optional[float] = 0.0,
     ) -> None:
         super(PostLNMultimodalTransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
@@ -340,7 +342,6 @@ class PostLNMultimodalTransformerDecoder(nn.Module):
             token_type_vocab_size=token_type_vocab_size,
             dropout=dropout,
             use_layer_norm=use_embedding_layer_norm,
-            use_token_type_embeddings=False,
             ln_eps=ln_eps,
             pos_embedding_type=pos_embedding_type,
         )
@@ -355,6 +356,7 @@ class PostLNMultimodalTransformerDecoder(nn.Module):
             activation_name=activation_name,
             ln_eps=ln_eps,
             context_len=max_length,
+            layerdrop_threshold=layerdrop_threshold,
         )
 
     def forward(

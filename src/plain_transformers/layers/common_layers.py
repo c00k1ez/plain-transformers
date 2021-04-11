@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Optional, Tuple, Union, Callable
+import random
 
 import torch
 import torch.nn as nn
@@ -166,24 +167,42 @@ class TransformerEmbedding(nn.Module):
         pos_embedding_type: Optional[str] = "embedding",
         dropout: Optional[float] = 0.1,
         use_layer_norm: Optional[bool] = False,
-        use_token_type_embeddings: Optional[bool] = True,
         ln_eps: Optional[float] = 1e-12,
     ) -> None:
         super(TransformerEmbedding, self).__init__()
-        assert pos_embedding_type in ["embedding", "timing"]
+        assert token_type_vocab_size >= 0
+        assert vocab_size >= 0
+        assert d_model >= 0
+        assert max_length > 0
+        if token_type_vocab_size == 0:
+            use_token_type_embeddings = False
+        else:
+            use_token_type_embeddings = True
+        assert pos_embedding_type in [
+            "embedding",
+        ]  # "timing"]
         # TODO: implement timing signal
         self.token_embedding = nn.Embedding(vocab_size, d_model, pad_token_id)
         self.positional_embedding = nn.Embedding(max_length, d_model)
-        self.token_type_embedding = nn.Embedding(
-            token_type_vocab_size, d_model
-        )
+        if use_token_type_embeddings:
+            self.token_type_embedding = nn.Embedding(
+                token_type_vocab_size, d_model
+            )
+        else:
+            self.token_type_embedding = nn.Identity()
+            self.token_type_embedding.register_parameter("weight", None)
 
         self.dropout = nn.Dropout(dropout)
         self.register_buffer(
             "pos_ids", torch.arange(max_length).expand((1, -1))
         )
 
-        self.layer_norm = nn.LayerNorm(d_model, eps=ln_eps)
+        if use_layer_norm:
+            self.layer_norm = nn.LayerNorm(d_model, eps=ln_eps)
+        else:
+            self.layer_norm = nn.Identity()
+            self.layer_norm.register_parameter("weight", None)
+            self.layer_norm.register_parameter("bias", None)
 
         self.use_layer_norm = use_layer_norm
         self.use_token_type_embeddings = use_token_type_embeddings
@@ -195,22 +214,20 @@ class TransformerEmbedding(nn.Module):
     ) -> torch.Tensor:
         token_emb = self.token_embedding(input_ids)
         input_shape = token_emb.shape
+        if token_type_ids is None:
+            token_type_ids = torch.zeros(
+                input_shape[:-1],
+                dtype=torch.long,
+                device=self.pos_ids.device,
+            )
+        tt_emb = self.token_type_embedding(token_type_ids)
         if self.use_token_type_embeddings:
-            if token_type_ids is None:
-                token_type_ids = torch.zeros(
-                    input_shape[:-1],
-                    dtype=torch.long,
-                    device=self.pos_ids.device,
-                )
-            token_emb = token_emb + self.token_type_embedding(token_type_ids)
+            token_emb = token_emb + tt_emb
 
         pos_ids = self.pos_ids[:, : input_shape[1]]
 
         token_emb = token_emb + self.positional_embedding(pos_ids)
-
-        if self.use_layer_norm:
-            token_emb = self.layer_norm(token_emb)
-
+        token_emb = self.layer_norm(token_emb)
         token_emb = self.dropout(token_emb)
         return token_emb
 
@@ -220,12 +237,14 @@ class TransformerEncoder(nn.Module):
         self,
         num_layers: int,
         encoder_class: Callable,
+        layerdrop_threshold: Optional[float] = 0.0,
         **kwargs,
     ) -> None:
         super(TransformerEncoder, self).__init__()
         self.encoder_layers = nn.ModuleList(
             [encoder_class(**kwargs) for _ in range(num_layers)]
         )
+        self.layerdrop_threshold = layerdrop_threshold
 
     def forward(
         self,
@@ -233,9 +252,16 @@ class TransformerEncoder(nn.Module):
         attention_mask: Optional[torch.Tensor] = None,
         get_attention_scores: Optional[bool] = False,
     ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
-        # TODO: implement https://arxiv.org/abs/1909.11556
         attn_scores = []
         for layer in self.encoder_layers:
+            # LayerDrop: https://arxiv.org/abs/1909.11556
+            # TODO: make something with different shapes
+            # of attn_scores while using LayerDrop
+            dropout_probability = random.uniform(0, 1)
+            if self.training and (
+                dropout_probability < self.layerdrop_threshold
+            ):
+                continue
             hidden = layer(
                 hidden,
                 attention_mask=attention_mask,
@@ -256,12 +282,14 @@ class TransformerDecoder(nn.Module):
         self,
         num_layers: int,
         decoder_class: Callable,
+        layerdrop_threshold: Optional[float] = 0.0,
         **kwargs,
     ) -> None:
         super(TransformerDecoder, self).__init__()
         self.decoder_layers = nn.ModuleList(
             [decoder_class(**kwargs) for _ in range(num_layers)]
         )
+        self.layerdrop_threshold = layerdrop_threshold
 
     def forward(
         self,
@@ -275,9 +303,16 @@ class TransformerDecoder(nn.Module):
         ] = None,
         get_attention_scores: Optional[bool] = False,
     ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
-        # TODO: implement https://arxiv.org/abs/1909.11556
         attn_scores = []
         for layer in self.decoder_layers:
+            # LayerDrop: https://arxiv.org/abs/1909.11556
+            # TODO: make something with different shapes
+            # of attn_scores while using LayerDrop
+            dropout_probability = random.uniform(0, 1)
+            if self.training and (
+                dropout_probability < self.layerdrop_threshold
+            ):
+                continue
             hidden = layer(
                 hidden=hidden,
                 encoder_hidden_state=encoder_hidden_state,

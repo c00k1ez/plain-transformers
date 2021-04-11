@@ -47,12 +47,13 @@ class Transformer(nn.Module):
         decoder_activation_name: Optional[str] = "gelu",
         decoder_ln_eps: Optional[float] = 1e-12,
         decoder_dropout: Optional[float] = 0.1,
+        decoder_layerdrop_threshold: Optional[float] = 0.0,
         encoder_dropout: Optional[float] = 0.1,
         encoder_use_embedding_layer_norm: Optional[bool] = True,
         encoder_pos_embedding_type: Optional[str] = "embedding",
         encoder_activation_name: Optional[str] = "gelu",
         encoder_ln_eps: Optional[float] = 1e-12,
-        encoder_use_token_type_embeddings: Optional[bool] = True,
+        encoder_layerdrop_threshold: Optional[float] = 0.0,
         share_decoder_head_weights: Optional[bool] = True,
         share_encoder_decoder_embeddings: Optional[bool] = False,
         label_smoothing: Optional[float] = 0.,
@@ -71,8 +72,8 @@ class Transformer(nn.Module):
             pos_embedding_type=encoder_pos_embedding_type,
             activation_name=encoder_activation_name,
             ln_eps=encoder_ln_eps,
-            use_token_type_embeddings=encoder_use_token_type_embeddings,
             vocab_size=encoder_vocab_size,
+            layerdrop_threshold=encoder_layerdrop_threshold,
         )
         self.decoder = decoder_class(
             d_model=d_model,
@@ -88,6 +89,7 @@ class Transformer(nn.Module):
             pos_embedding_type=decoder_pos_embedding_type,
             activation_name=decoder_activation_name,
             ln_eps=decoder_ln_eps,
+            layerdrop_threshold=decoder_layerdrop_threshold,
         )
         self.lm_head = nn.Linear(d_model, decoder_vocab_size, bias=False)
         if share_decoder_head_weights:

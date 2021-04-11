@@ -96,7 +96,7 @@ class PostLNTransformerEncoder(nn.Module):
         pos_embedding_type: Optional[str] = "embedding",
         activation_name: Optional[str] = "gelu",
         ln_eps: Optional[float] = 1e-12,
-        use_token_type_embeddings: Optional[bool] = True,
+        layerdrop_threshold: Optional[float] = 0.0,
     ) -> None:
         super(PostLNTransformerEncoder, self).__init__()
         self.embedding = TransformerEmbedding(
@@ -109,7 +109,6 @@ class PostLNTransformerEncoder(nn.Module):
             dropout=dropout,
             use_layer_norm=use_embedding_layer_norm,
             ln_eps=ln_eps,
-            use_token_type_embeddings=use_token_type_embeddings,
         )
         self.encoder = TransformerEncoder(
             num_layers=num_layers,
@@ -120,6 +119,7 @@ class PostLNTransformerEncoder(nn.Module):
             dropout=dropout,
             activation_name=activation_name,
             ln_eps=ln_eps,
+            layerdrop_threshold=layerdrop_threshold,
         )
 
     def forward(
