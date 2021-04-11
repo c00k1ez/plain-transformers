@@ -42,7 +42,6 @@ cfg = {
         'first_encoder_n_heads': 8,
         'first_encoder_dim_feedforward': 2048,
         'first_encoder_num_layers': 3,
-        'first_encoder_use_token_type_embeddings': False,
     },
     'second_encoder': {
         'second_encoder_vocab_size': encoder_tokenizer.vocab_size(),
@@ -52,7 +51,6 @@ cfg = {
         'second_encoder_n_heads': 8,
         'second_encoder_dim_feedforward': 2048,
         'second_encoder_num_layers': 3,
-        'second_encoder_use_token_type_embeddings': False
     },
     'decoder': {
         'decoder_max_length': 512,
