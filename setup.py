@@ -39,7 +39,7 @@ setuptools.setup(
     name="plain-tranformers",
     version="0.0.1",
     author="c00k1ez",
-    author_email="egorplotnikov18@gmail.com",
+    author_email="c00k1ez.th13f@gmail.com",
     description="one more transformers lib",
     long_description=long_description,
     long_description_content_type="text/markdown",
