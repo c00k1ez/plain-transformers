@@ -36,7 +36,7 @@ def _load_requirements(
 
 
 setuptools.setup(
-    name="plain-tranformers",
+    name="plain-transformers",
     version="0.0.1",
     author="c00k1ez",
     author_email="c00k1ez.th13f@gmail.com",
