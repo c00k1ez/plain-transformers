@@ -1,6 +1,6 @@
 # Simple way to use transformer models
 ## Installation
-```pip install git+https://github.com/c00k1ez/plain_transformers.git```
+```pip install plain_transformers```
 
 ## Usage
 Multimodal transformer example with two tokenizers:
