@@ -228,8 +228,8 @@ class MultimodalTransformer(nn.Module):
                 [
                     labels[:, 1:],
                     torch.LongTensor(
-                        [[self.pad_token_id]], device=labels.device
-                    ).repeat(batch_size, 1),
+                        [[self.pad_token_id]]
+                    ).to(labels.device).repeat(batch_size, 1),
                 ],
                 dim=-1,
             )
