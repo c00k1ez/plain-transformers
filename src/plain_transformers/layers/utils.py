@@ -45,7 +45,6 @@ def act_to_func(act_name: str) -> Callable:
         "leaky_relu": F.leaky_relu,
         "glu": F.glu,
         "tanh": F.tanh,
-        "silu": F.silu,
     }
     if act_name in acts:
         return acts[act_name]
