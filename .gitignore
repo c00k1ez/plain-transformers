@@ -3,3 +3,4 @@
 __pycache__/
 dist/
 plain_transformers.egg-info/
+.pytest_cache/
