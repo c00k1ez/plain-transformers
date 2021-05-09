@@ -1,5 +1,5 @@
 .vscode/
 .idea/
-__pychache__/
+__pycache__/
 dist/
 plain_transformers.egg-info/

@@ -12,21 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Union
 
 import torch
 import torch.nn.functional as F
 
 
 def create_attention_mask(
-    attention_mask: torch.Tensor,
+    attention_mask: Union[torch.Tensor, None],
     input_shape: Tuple[int, int],
     device: torch.device,
     src_size: int = 1,
 ) -> torch.Tensor:
-    # [batch_size, seq_len] -> [batch_size, 1, tgt_size, seq_len]
+    # [batch_size, seq_len] -> [batch_size, 1, src_size, seq_len]
     if attention_mask is None:
-        attention_mask = torch.ones(*input_shape, device=device)
+        attention_mask = torch.ones(*input_shape).to(device)
     attention_mask = attention_mask.unsqueeze(1).unsqueeze(1)
     if src_size > 1:
         attention_mask = attention_mask.repeat(1, 1, src_size, 1)
@@ -43,7 +43,6 @@ def act_to_func(act_name: str) -> Callable:
         "selu": F.selu,
         "celu": F.celu,
         "leaky_relu": F.leaky_relu,
-        "glu": F.glu,
         "tanh": F.tanh,
     }
     if act_name in acts:
