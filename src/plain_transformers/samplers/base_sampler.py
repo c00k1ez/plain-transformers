@@ -102,14 +102,14 @@ class BaseSampler(object):
                     self.decoder_tokenizer.encode(
                         [decoder_input_text],
                         bos=True,
-                        eos=True,
+                        eos=False,
                         output_type=yttm.OutputType.ID,
                     )
                 ).to(device)
         else:
             labels = torch.LongTensor(
                 [[
-                    self.decoder_tokenizer.pad_id,
+                    self.decoder_tokenizer.bos_id,
                 ]]
             ).to(device)
 
