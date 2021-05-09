@@ -10,8 +10,8 @@ deploy:
   username: c00k1ez
   password:
     secure: V6oVWTG1ah0qlYYvg5eyR1TFFLW0mIzWdqNUn+x/kRlCzeCIXiwNlH/BpevoRqczwMcoc7kVF1P9JByXXixqeZR4gs9oQGc41MoiKSsaiYiCTm7lzK3e72D6lUtdjfoe3WyjSUnQnKF9Oc2HWw+3YH9Fs4sHfDX7espTgqm/X0daZae9t5m9EPqMNU5QlH7tRF6tYLbJgIsy6RmmkrURSgHzMTs7Bbj4lv/JJPmcOHEXviZD1/g98RguJD5HYs63bc2h8wYO3JqgBJIIcxHGS83/ovghExiwfFdZiDg0OfnmtHMWLVt90jwTllLkrQj8kDYTmtPRC/46tL8vY03UacM8TL3yPLFIbLnI/lRsLHDoqG4H0aZvZmLrtHU/hkfBe7KMfhqDx93N7IAsCCY5RC+SheegVamFTlkWPVt6jRziuadeaIzqx7D2EHbixlBk1wcLbIX6tQ/x0WcsSycBpkaw8kULAaR8YNxpyQWHKRxaHO+I8FfxehzHy2vxGvkdcvPGotGORYK/SS/RLmllbXU91onacZVzwhztjhfRvOxzh606L15t+QzuUzfPOW0DPBypF+FPtqk44dmMwvWAZnWhQlI7aoE3y5zozKoT7lQKhIzIyhot0zMRCDHhuYkyJBymcm/4Ln3dZfjWWNTzGkkLBHjfiRr1JQBHjbz1iaw=
-on:
-    branch: main
+  on:
+      branch: main
 
 branches:
   only: 
