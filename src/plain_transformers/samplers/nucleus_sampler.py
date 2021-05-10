@@ -45,7 +45,7 @@ class NucleusSampler(BaseSampler):
             sorted_indices_to_remove = cumulative_probs >= top_p
             sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
             sorted_indices_to_remove[..., 0] = 0
-            indices_to_remove = torch.zeros_like(logits, dtype=torch.uint8).scatter_(
+            indices_to_remove = torch.zeros_like(logits, dtype=sorted_indices_to_remove.dtype).scatter_(
                 dim=-1, index=sorted_indices, src=sorted_indices_to_remove
             )  # .to(logits.device)
             logits[indices_to_remove] = float("-inf")
