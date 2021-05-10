@@ -61,15 +61,9 @@ class MultiHeadAttention(nn.Module):
         self.n_heads = n_heads
         self.hidden_per_head = d_model // n_heads
         self.scale = self.hidden_per_head ** 0.5
-        self.query_input_dim = (
-            d_model if query_input_dim is None else query_input_dim
-        )
-        self.key_input_dim = (
-            d_model if key_input_dim is None else key_input_dim
-        )
-        self.value_input_dim = (
-            d_model if value_input_dim is None else value_input_dim
-        )
+        self.query_input_dim = d_model if query_input_dim is None else query_input_dim
+        self.key_input_dim = d_model if key_input_dim is None else key_input_dim
+        self.value_input_dim = d_model if value_input_dim is None else value_input_dim
 
         self.key_projection = nn.Linear(self.key_input_dim, d_model)
         self.query_projection = nn.Linear(self.query_input_dim, d_model)
@@ -84,9 +78,9 @@ class MultiHeadAttention(nn.Module):
             self.register_buffer("masked_val", torch.FloatTensor([-1e4]))
             self.register_buffer(
                 "tri_mask",
-                torch.tril(
-                    torch.ones((context_len, context_len), dtype=torch.uint8)
-                ).view(1, 1, context_len, context_len),
+                torch.tril(torch.ones((context_len, context_len), dtype=torch.uint8)).view(
+                    1, 1, context_len, context_len
+                ),
             )
         else:
             self.register_buffer("masked_val", None)
@@ -101,18 +95,12 @@ class MultiHeadAttention(nn.Module):
         # -> (batch_size, n_heads, seq_len, hidden_per_head)
         return x.permute(0, 2, 1, 3)
 
-    def _generate_decoder_self_attn_mask(
-        self, q_seq_len: int, k_seq_len: int
-    ) -> torch.Tensor:
+    def _generate_decoder_self_attn_mask(self, q_seq_len: int, k_seq_len: int) -> torch.Tensor:
         # TODO: fix case then k_seq_len < q_seq_len
         if self.training:
-            attn_mask = self.tri_mask[
-                :, :, k_seq_len - q_seq_len : k_seq_len, :k_seq_len
-            ]
+            attn_mask = self.tri_mask[:, :, k_seq_len - q_seq_len : k_seq_len, :k_seq_len]
         else:
-            attn_mask = torch.ones((1, 1, k_seq_len, k_seq_len)).type_as(
-                self.tri_mask
-            )
+            attn_mask = torch.ones((1, 1, k_seq_len, k_seq_len)).type_as(self.tri_mask)
         return attn_mask
 
     def forward(
@@ -134,9 +122,7 @@ class MultiHeadAttention(nn.Module):
         raw_scores = torch.matmul(query_proj, key_proj.transpose(-1, -2))
 
         if self.attn_type == "decoder":
-            decoder_attn_mask = self._generate_decoder_self_attn_mask(
-                key_proj.shape[2], key_proj.shape[2]
-            )
+            decoder_attn_mask = self._generate_decoder_self_attn_mask(key_proj.shape[2], key_proj.shape[2])
             raw_scores = torch.where(
                 decoder_attn_mask.bool(),
                 raw_scores,
@@ -185,17 +171,13 @@ class TransformerEmbedding(nn.Module):
         self.token_embedding = nn.Embedding(vocab_size, d_model, pad_token_id)
         self.positional_embedding = nn.Embedding(max_length, d_model)
         if use_token_type_embeddings:
-            self.token_type_embedding = nn.Embedding(
-                token_type_vocab_size, d_model
-            )
+            self.token_type_embedding = nn.Embedding(token_type_vocab_size, d_model)
         else:
             self.token_type_embedding = nn.Identity()
             self.token_type_embedding.register_parameter("weight", None)
 
         self.dropout = nn.Dropout(dropout)
-        self.register_buffer(
-            "pos_ids", torch.arange(max_length).expand((1, -1))
-        )
+        self.register_buffer("pos_ids", torch.arange(max_length).expand((1, -1)))
 
         if use_layer_norm:
             self.layer_norm = nn.LayerNorm(d_model, eps=ln_eps)
@@ -241,9 +223,7 @@ class TransformerEncoder(nn.Module):
         **kwargs,
     ) -> None:
         super(TransformerEncoder, self).__init__()
-        self.encoder_layers = nn.ModuleList(
-            [encoder_class(**kwargs) for _ in range(num_layers)]
-        )
+        self.encoder_layers = nn.ModuleList([encoder_class(**kwargs) for _ in range(num_layers)])
         self.layerdrop_threshold = layerdrop_threshold
 
     def forward(
@@ -258,9 +238,7 @@ class TransformerEncoder(nn.Module):
             # TODO: make something with different shapes
             # of attn_scores while using LayerDrop
             dropout_probability = random.uniform(0, 1)
-            if self.training and (
-                dropout_probability < self.layerdrop_threshold
-            ):
+            if self.training and (dropout_probability < self.layerdrop_threshold):
                 continue
             hidden = layer(
                 hidden,
@@ -286,21 +264,15 @@ class TransformerDecoder(nn.Module):
         **kwargs,
     ) -> None:
         super(TransformerDecoder, self).__init__()
-        self.decoder_layers = nn.ModuleList(
-            [decoder_class(**kwargs) for _ in range(num_layers)]
-        )
+        self.decoder_layers = nn.ModuleList([decoder_class(**kwargs) for _ in range(num_layers)])
         self.layerdrop_threshold = layerdrop_threshold
 
     def forward(
         self,
         hidden: torch.Tensor,
-        encoder_hidden_state: Union[
-            torch.Tensor, Tuple[torch.Tensor, torch.Tensor]
-        ],
+        encoder_hidden_state: Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]],
         attention_mask: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[
-            Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]
-        ] = None,
+        encoder_attention_mask: Optional[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]] = None,
         get_attention_scores: Optional[bool] = False,
     ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
         attn_scores = []
@@ -309,9 +281,7 @@ class TransformerDecoder(nn.Module):
             # TODO: make something with different shapes
             # of attn_scores while using LayerDrop
             dropout_probability = random.uniform(0, 1)
-            if self.training and (
-                dropout_probability < self.layerdrop_threshold
-            ):
+            if self.training and (dropout_probability < self.layerdrop_threshold):
                 continue
             hidden = layer(
                 hidden=hidden,

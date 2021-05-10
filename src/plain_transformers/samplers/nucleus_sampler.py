@@ -22,17 +22,13 @@ class NucleusSampler(BaseSampler):
         super(NucleusSampler, self).__init__(*args, **kwargs)
 
     @torch.no_grad()
-    def sample(
-        self, logits: torch.Tensor, temperatype: float, **kwargs
-    ) -> torch.Tensor:
+    def sample(self, logits: torch.Tensor, temperatype: float, **kwargs) -> torch.Tensor:
         top_k, top_p = None, None
         if "top_k" in kwargs:
             top_k = kwargs["top_k"]
         if "top_p" in kwargs:
             top_p = kwargs["top_p"]
-        assert (top_k is None and top_p is not None) or (
-            top_k is not None and top_p is None
-        )
+        assert (top_k is None and top_p is not None) or (top_k is not None and top_p is None)
         probs = torch.softmax(logits / temperatype, dim=-1)
         top_vals_inds = None
         if top_k is not None:

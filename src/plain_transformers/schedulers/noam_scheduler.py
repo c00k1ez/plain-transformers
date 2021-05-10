@@ -31,8 +31,6 @@ class NoamScheduler(_LRScheduler):
 
     def get_lr(self) -> List[float]:
         last_step = max(1, self.last_epoch)
-        scale_factor = self.d_model ** (-0.5) * min(
-            last_step ** (-0.5), last_step * self.warmup_steps ** (-1.5)
-        )
+        scale_factor = self.d_model ** (-0.5) * min(last_step ** (-0.5), last_step * self.warmup_steps ** (-1.5))
         new_lrs = [lr * scale_factor for lr in self.base_lrs]
         return new_lrs

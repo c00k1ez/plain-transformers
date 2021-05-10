@@ -25,13 +25,13 @@ class BPEWrapper(yttm.BPE):
         bos_id: Optional[int] = 2,
         eos_id: Optional[int] = 3,
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         super(BPEWrapper, self).__init__(*args, **kwargs)
-        assert self.vocab()[pad_id] == '<PAD>'
-        assert self.vocab()[unk_id] == '<UNK>'
-        assert self.vocab()[bos_id] == '<BOS>'
-        assert self.vocab()[eos_id] == '<EOS>'
+        assert self.vocab()[pad_id] == "<PAD>"
+        assert self.vocab()[unk_id] == "<UNK>"
+        assert self.vocab()[bos_id] == "<BOS>"
+        assert self.vocab()[eos_id] == "<EOS>"
         self.pad_id = pad_id
         self.unk_id = unk_id
         self.bos_id = bos_id

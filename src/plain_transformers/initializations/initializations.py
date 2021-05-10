@@ -18,9 +18,7 @@ import torch
 import torch.nn as nn
 
 
-def normal_initialization(
-    module: nn.Module, init_range: Optional[float] = 0.02
-) -> None:
+def normal_initialization(module: nn.Module, init_range: Optional[float] = 0.02) -> None:
     if isinstance(module, (nn.Linear, nn.Embedding)):
         module.weight.data.normal_(mean=0.0, std=init_range)
         if isinstance(module, nn.Linear):

@@ -26,9 +26,7 @@ class LabelSmoothingLoss(nn.Module):
     def forward(self, input, target, reduction="mean"):
         assert reduction in ["mean", "sum"]
         log_prob = F.log_softmax(input, dim=-1)
-        weight = (
-            input.new_ones(input.shape) * self.smooth / (input.shape[-1] - 2)
-        )
+        weight = input.new_ones(input.shape) * self.smooth / (input.shape[-1] - 2)
         weight.scatter_(-1, target.unsqueeze(-1), (1.0 - self.smooth))
         weight.masked_fill_((target == 1).unsqueeze(-1), 0)
         loss = (-weight * log_prob).sum(dim=-1).sum()

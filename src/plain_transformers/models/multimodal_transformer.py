@@ -71,7 +71,7 @@ class MultimodalTransformer(nn.Module):
         share_decoder_head_weights: Optional[bool] = True,
         share_encoder_decoder_embeddings: Optional[bool] = False,
         share_encoder_embeddings: Optional[bool] = False,
-        label_smoothing: Optional[float] = 0.,
+        label_smoothing: Optional[float] = 0.0,
     ) -> None:
         super(MultimodalTransformer, self).__init__()
         self.first_encoder = first_encoder_class(
@@ -127,16 +127,10 @@ class MultimodalTransformer(nn.Module):
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
         if share_encoder_decoder_embeddings:
-            self.first_encoder.embedding.token_embedding.weight = (
-                self.decoder.embedding.token_embedding.weight
-            )
-            self.second_encoder.embedding.token_embedding.weight = (
-                self.decoder.embedding.token_embedding.weight
-            )
+            self.first_encoder.embedding.token_embedding.weight = self.decoder.embedding.token_embedding.weight
+            self.second_encoder.embedding.token_embedding.weight = self.decoder.embedding.token_embedding.weight
         if share_encoder_embeddings:
-            self.first_encoder.embedding.token_embedding.weight = (
-                self.second_encoder.embedding.token_embedding.weight
-            )
+            self.first_encoder.embedding.token_embedding.weight = self.second_encoder.embedding.token_embedding.weight
         self.loss_function = LabelSmoothingLoss(
             smoothing=label_smoothing,
             ignore_index=decoder_pad_token_id,
@@ -152,20 +146,11 @@ class MultimodalTransformer(nn.Module):
         first_encoder_attention_mask: Optional[torch.Tensor] = None,
         second_encoder_attention_mask: Optional[torch.Tensor] = None,
         get_attention_scores: Optional[bool] = False,
-        cached_encoder_state: Optional[
-            Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]
-        ] = None,
+        cached_encoder_state: Optional[Tuple[Dict[str, torch.Tensor], Dict[str, torch.Tensor]]] = None,
         return_encoder_state: Optional[bool] = False,
         compute_loss: Optional[bool] = False,
         get_logits: Optional[bool] = False,
-    ) -> Dict[
-        str,
-        Union[
-            torch.Tensor,
-            Dict[str, torch.Tensor],
-            Dict[str, Dict[str, torch.Tensor]],
-        ],
-    ]:
+    ) -> Dict[str, Union[torch.Tensor, Dict[str, torch.Tensor], Dict[str, Dict[str, torch.Tensor]], ], ]:
         first_encoder_state, second_encoder_state = None, None
         attn_scores = {}
         if cached_encoder_state is not None:
@@ -212,11 +197,7 @@ class MultimodalTransformer(nn.Module):
         hidden = hidden[0]
         raw_probs = self.lm_head(hidden)
 
-        output = {
-            "lm_probs": torch.softmax(raw_probs, dim=-1)
-            if not get_logits
-            else raw_probs
-        }
+        output = {"lm_probs": torch.softmax(raw_probs, dim=-1) if not get_logits else raw_probs}
         if return_encoder_state:
             output["encoder_hidden_state"] = (
                 first_encoder_state,
@@ -227,13 +208,9 @@ class MultimodalTransformer(nn.Module):
             labels = torch.cat(
                 [
                     labels[:, 1:],
-                    torch.LongTensor(
-                        [[self.pad_token_id]]
-                    ).to(labels.device).repeat(batch_size, 1),
+                    torch.LongTensor([[self.pad_token_id]]).to(labels.device).repeat(batch_size, 1),
                 ],
                 dim=-1,
             )
-            output["loss_val"] = self.loss_function(
-                raw_probs.view(-1, raw_probs.shape[-1]), labels.view(-1)
-            )
+            output["loss_val"] = self.loss_function(raw_probs.view(-1, raw_probs.shape[-1]), labels.view(-1))
         return output

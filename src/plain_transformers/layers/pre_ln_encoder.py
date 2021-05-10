@@ -40,9 +40,7 @@ class PreLNEncoderLayer(nn.Module):
         super(PreLNEncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(d_model, n_heads, dropout)
         self.dropout = nn.Dropout(dropout)
-        self.ffn = FFN(
-            d_model, dim_feedforward, dropout, activation_name=activation_name
-        )
+        self.ffn = FFN(d_model, dim_feedforward, dropout, activation_name=activation_name)
         self.pre_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
         self.pre_ffn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
@@ -130,9 +128,7 @@ class PreLNTransformerEncoder(nn.Module):
         get_attention_scores: Optional[bool] = False,
     ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
 
-        attention_mask = create_attention_mask(
-            attention_mask, input_ids.shape, input_ids.device
-        )
+        attention_mask = create_attention_mask(attention_mask, input_ids.shape, input_ids.device)
         embeddings = self.embedding(input_ids, token_type_ids)
         hidden = self.encoder(
             embeddings,

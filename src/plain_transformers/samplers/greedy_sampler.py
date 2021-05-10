@@ -22,9 +22,7 @@ class GreedySampler(BaseSampler):
         super(GreedySampler, self).__init__(*args, **kwargs)
 
     @torch.no_grad()
-    def sample(
-        self, logits: torch.Tensor, temperatype: float, **kwargs
-    ) -> torch.Tensor:
+    def sample(self, logits: torch.Tensor, temperatype: float, **kwargs) -> torch.Tensor:
         probs = torch.softmax(logits / temperatype, dim=-1)
         max_val = probs.max(dim=-1)[1].unsqueeze(-1)
         return max_val

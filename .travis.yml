@@ -1,10 +1,13 @@
 language: python
 python:
 - '3.6'
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install make
 install:
-- pip install -r requirements.txt
-- pip install .
-script: pytest
+  - pip install -r requirements.txt
+  - pip install .
+script: make tests
 deploy:
   provider: pypi
   username: __token__

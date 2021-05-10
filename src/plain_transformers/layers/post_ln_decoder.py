@@ -48,9 +48,7 @@ class PostLNDecoderLayer(nn.Module):
         self.self_attn_merge_matrix = nn.Linear(d_model, d_model)
         self.post_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
-        self.cross_attention = MultiHeadAttention(
-            d_model=d_model, n_heads=n_heads, dropout=dropout
-        )
+        self.cross_attention = MultiHeadAttention(d_model=d_model, n_heads=n_heads, dropout=dropout)
         self.cross_attn_merge_matrix = nn.Linear(d_model, d_model)
         self.post_cross_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
@@ -212,15 +210,11 @@ class PostLNMultimodalDecoderLayer(nn.Module):
         self.self_attn_merge_matrix = nn.Linear(d_model, d_model)
         self.post_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
-        self.first_cross_attention = MultiHeadAttention(
-            d_model=d_model, n_heads=n_heads, dropout=dropout
-        )
+        self.first_cross_attention = MultiHeadAttention(d_model=d_model, n_heads=n_heads, dropout=dropout)
         self.first_cross_attn_merge_matrix = nn.Linear(d_model, d_model)
         self.first_post_cross_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
-        self.second_cross_attention = MultiHeadAttention(
-            d_model=d_model, n_heads=n_heads, dropout=dropout
-        )
+        self.second_cross_attention = MultiHeadAttention(d_model=d_model, n_heads=n_heads, dropout=dropout)
         self.second_cross_attn_merge_matrix = nn.Linear(d_model, d_model)
         self.second_post_cross_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
@@ -276,13 +270,9 @@ class PostLNMultimodalDecoderLayer(nn.Module):
             attn_scores.append(first_cross_attn_block[1])
 
         first_cross_attn_block = first_cross_attn_block[0]
-        first_cross_attn_block = self.first_cross_attn_merge_matrix(
-            first_cross_attn_block
-        )
+        first_cross_attn_block = self.first_cross_attn_merge_matrix(first_cross_attn_block)
         first_cross_attn_block = first_cross_attn_block + self_attn_block
-        first_cross_attn_block = self.first_post_cross_attn_ln(
-            first_cross_attn_block
-        )
+        first_cross_attn_block = self.first_post_cross_attn_ln(first_cross_attn_block)
 
         second_cross_attn_block = self.second_cross_attention(
             query=first_cross_attn_block,
@@ -295,15 +285,9 @@ class PostLNMultimodalDecoderLayer(nn.Module):
             attn_scores.append(second_cross_attn_block[1])
             attn_scores = torch.stack(attn_scores, dim=-1)
         second_cross_attn_block = second_cross_attn_block[0]
-        second_cross_attn_block = self.second_cross_attn_merge_matrix(
-            second_cross_attn_block
-        )
-        second_cross_attn_block = (
-            second_cross_attn_block + first_cross_attn_block
-        )
-        second_cross_attn_block = self.second_post_cross_attn_ln(
-            second_cross_attn_block
-        )
+        second_cross_attn_block = self.second_cross_attn_merge_matrix(second_cross_attn_block)
+        second_cross_attn_block = second_cross_attn_block + first_cross_attn_block
+        second_cross_attn_block = self.second_post_cross_attn_ln(second_cross_attn_block)
 
         ffn_block = self.ffn(second_cross_attn_block)
         ffn_block = ffn_block + second_cross_attn_block

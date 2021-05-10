@@ -47,9 +47,7 @@ class BaseSampler(object):
             self.decoder_tokenizer = self.first_encoder_tokenizer
 
     @torch.no_grad()
-    def sample(
-        self, logits: torch.Tensor, temperatype: float, **kwargs
-    ) -> torch.Tensor:
+    def sample(self, logits: torch.Tensor, temperatype: float, **kwargs) -> torch.Tensor:
         raise NotImplementedError("You have to implement this method")
 
     @torch.no_grad()
@@ -64,7 +62,7 @@ class BaseSampler(object):
         **kwargs,
     ):
         if device is None:
-            device = torch.device('cpu')
+            device = torch.device("cpu")
         if isinstance(input_text, torch.Tensor):
             assert len(input_text.shape) == 2
             encoder_input_ids = input_text.to(device)
@@ -108,9 +106,11 @@ class BaseSampler(object):
                 ).to(device)
         else:
             labels = torch.LongTensor(
-                [[
-                    self.decoder_tokenizer.bos_id,
-                ]]
+                [
+                    [
+                        self.decoder_tokenizer.bos_id,
+                    ]
+                ]
             ).to(device)
 
         args = {
@@ -137,9 +137,7 @@ class BaseSampler(object):
             logits = model_out["lm_probs"][:, -1, :]
             next_token = self.sample(logits, temperatype, **kwargs)
             if not get_cached_encoder_state:
-                args["cached_encoder_state"] = model_out[
-                    "encoder_hidden_state"
-                ]
+                args["cached_encoder_state"] = model_out["encoder_hidden_state"]
                 args["return_encoder_state"] = False
                 get_cached_encoder_state = True
             args["labels"] = torch.cat([args["labels"], next_token], dim=-1)

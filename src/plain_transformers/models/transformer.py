@@ -56,7 +56,7 @@ class Transformer(nn.Module):
         encoder_layerdrop_threshold: Optional[float] = 0.0,
         share_decoder_head_weights: Optional[bool] = True,
         share_encoder_decoder_embeddings: Optional[bool] = False,
-        label_smoothing: Optional[float] = 0.,
+        label_smoothing: Optional[float] = 0.0,
     ) -> None:
         super(Transformer, self).__init__()
         self.encoder = encoder_class(
@@ -95,9 +95,7 @@ class Transformer(nn.Module):
         if share_decoder_head_weights:
             self.lm_head.weight = self.decoder.embedding.token_embedding.weight
         if share_encoder_decoder_embeddings:
-            self.encoder.embedding.token_embedding.weight = (
-                self.decoder.embedding.token_embedding.weight
-            )
+            self.encoder.embedding.token_embedding.weight = self.decoder.embedding.token_embedding.weight
         self.loss_function = LabelSmoothingLoss(
             smoothing=label_smoothing,
             ignore_index=decoder_pad_token_id,
@@ -147,11 +145,7 @@ class Transformer(nn.Module):
         hidden = hidden[0]
         raw_probs = self.lm_head(hidden)
 
-        output = {
-            "lm_probs": torch.softmax(raw_probs, dim=-1)
-            if not get_logits
-            else raw_probs
-        }
+        output = {"lm_probs": torch.softmax(raw_probs, dim=-1) if not get_logits else raw_probs}
         if return_encoder_state:
             output["encoder_hidden_state"] = encoder_state
         if compute_loss:
@@ -159,13 +153,9 @@ class Transformer(nn.Module):
             labels = torch.cat(
                 [
                     labels[:, 1:],
-                    torch.LongTensor(
-                        [[self.pad_token_id]]
-                    ).repeat(batch_size, 1).type_as(labels),
+                    torch.LongTensor([[self.pad_token_id]]).repeat(batch_size, 1).type_as(labels),
                 ],
                 dim=-1,
             )
-            output["loss_val"] = self.loss_function(
-                raw_probs.view(-1, raw_probs.shape[-1]), labels.view(-1)
-            )
+            output["loss_val"] = self.loss_function(raw_probs.view(-1, raw_probs.shape[-1]), labels.view(-1))
         return output
