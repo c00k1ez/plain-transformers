@@ -1,4 +1,7 @@
 # Simple way to use transformer models
+
+[![PyPI version](https://badge.fury.io/py/plain-transformers.svg)](https://badge.fury.io/py/plain-transformers)
+[![Build Status](https://www.travis-ci.com/c00k1ez/plain_transformers.svg?branch=main)](https://www.travis-ci.com/c00k1ez/plain_transformers)
 ## Installation
 ```pip install plain_transformers```
 
