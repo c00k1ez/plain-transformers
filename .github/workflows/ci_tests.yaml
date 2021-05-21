@@ -1,0 +1,71 @@
+# based on workflows from https://github.com/albumentations-team/albumentations
+
+name: CI testing
+
+# see: https://help.github.com/en/actions/reference/events-that-trigger-workflows
+on:  # Trigger the workflow on push or pull request, but only for the master branch
+  push:
+    branches: [main, "release/*"]
+  pull_request:
+    branches: [main, "release/*"]
+
+jobs:
+  run_tests:
+    name: Test and lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest] # TODO: add windows-latest support (fix yttm issue)
+        python-version: [3.6, 3.7, 3.8]
+      fail-fast: false
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Update pip
+      run: python -m pip install --upgrade pip
+    - name: Install PyTorch on Linux and Windows
+      if: >
+        matrix.os == 'ubuntu-latest' ||
+        matrix.os == 'windows-latest'
+      run: >
+        pip install torch==1.6.0+cpu
+        -f https://download.pytorch.org/whl/torch_stable.html
+    - name: Install PyTorch on MacOS
+      if: matrix.os == 'macos-latest'
+      run: pip install torch==1.6.0
+    - name: Install dependencies
+      run: pip install .
+    - name: Install linters
+      run: pip install flake8==3.9.0
+    - name: Run PyTest
+      run: make tests
+    - name: Run Flake8
+      run: flake8 .
+  
+  check_formatting:
+    name: Check code formatting with Black, Flake8, isort
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Update pip
+      run: python -m pip install --upgrade pip
+    - name: Install black, isort, flake8
+      run: pip install black==20.8b1 isort==4.3.21 flake8==3.9.0
+    - name: Run Black
+      run: black --config=pyproject.toml --check .
+    - name: Run Flake8
+      run: flake8 . --config setup.cfg
+    - name: Run isort
+      run: isort . -sp setup.cfg --recursive --check-only -s tests/

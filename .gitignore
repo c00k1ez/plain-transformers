@@ -1,0 +1,7 @@
+.vscode/
+.idea/
+__pycache__/
+dist/
+build/
+plain_transformers.egg-info/
+.pytest_cache/
