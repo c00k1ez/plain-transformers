@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .label_smoothing_loss import LabelSmoothingLoss
+from .unlikelihood_loss import UnlikelihoodLoss
