@@ -43,6 +43,10 @@ class UnlikelihoodLoss(nn.Module):
             self.custom_likelihood_loss = nn.CrossEntropyLoss(ignore_index=ignore_index, reduction=reduction)
 
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        if self.context_type == "sentence" and len(input.shape) > 2:
+            raise ValueError(
+                "If you use context_type 'sentence', you should pass 3-d input tensor and 2-d target tensor"
+            )
         raw_logits = F.log_softmax(input, dim=-1)
         unchanged_target = target.clone()
         with torch.no_grad():
