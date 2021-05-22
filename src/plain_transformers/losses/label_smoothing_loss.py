@@ -12,13 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class LabelSmoothingLoss(nn.Module):
-    def __init__(self, smoothing=0.0, ignore_index=0, reduction="mean"):
+    def __init__(
+        self,
+        smoothing: Optional[float] = 0.0,
+        ignore_index: Optional[int] = 0,
+        reduction: Optional[str] = "mean"
+    ) -> None:
         """
         ignore index must be equivalent to padding id
         """
@@ -29,7 +35,7 @@ class LabelSmoothingLoss(nn.Module):
         self.ignore_index = ignore_index
         self.reduction = reduction
 
-    def forward(self, input, target):
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         if len(input.shape) > 2:
             input = input.view(-1, input.shape[-1])
             target = target.view(-1)
