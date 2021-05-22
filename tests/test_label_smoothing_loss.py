@@ -15,6 +15,7 @@ class TestLabelSmoothingLoss:
         target = torch.randint(123, (5, 10))
         original_criterion = nn.CrossEntropyLoss(ignore_index=pad_id, reduction=reduction)
         implemented_criterion = LabelSmoothingLoss(ignore_index=pad_id, reduction=reduction)
-        orig_output = original_criterion(input.view(-1, 123), target.view(-1))
-        imp_output = implemented_criterion(input.view(-1, 123), target.view(-1))
+        with torch.no_grad():
+            orig_output = original_criterion(input.view(-1, 123), target.view(-1))
+            imp_output = implemented_criterion(input.view(-1, 123), target.view(-1))
         assert torch.allclose(orig_output, imp_output)
