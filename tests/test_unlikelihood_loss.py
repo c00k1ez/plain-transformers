@@ -7,10 +7,11 @@ from src.plain_transformers.losses import UnlikelihoodLoss
 
 class TestUnlikelihoodLoss:
     @pytest.mark.parametrize("reduction", ("sum", "mean", "none"))
-    def test_loss_shapes(self, reduction):
+    @pytest.mark.parametrize("context_type", ("sentence", "full_context"))
+    def test_loss_shapes(self, reduction, context_type):
         torch.manual_seed(42)
         pad_id = 0
-        criterion = UnlikelihoodLoss(0.25, ignore_index=pad_id, context_type="sentence", reduction=reduction)
+        criterion = UnlikelihoodLoss(0.25, ignore_index=pad_id, context_type=context_type, reduction=reduction)
         batch_size, seq_len, vocab_size = 5, 10, 60
         input = torch.rand((batch_size, seq_len, vocab_size))
         target = torch.randint(1, vocab_size, (batch_size, seq_len))
