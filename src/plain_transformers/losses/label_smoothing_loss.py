@@ -30,6 +30,9 @@ class LabelSmoothingLoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, input, target):
+        if len(input.shape) > 2:
+            input = input.view(-1, input.shape[-1])
+            target = target.view(-1)
         log_prob = F.log_softmax(input, dim=-1)
         weight = input.new_ones(input.shape) * self.smooth / (input.shape[-1] - 2)
         weight.scatter_(-1, target.unsqueeze(-1), (1.0 - self.smooth))
