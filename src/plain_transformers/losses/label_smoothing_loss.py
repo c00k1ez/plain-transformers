@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,10 +21,7 @@ import torch.nn.functional as F
 
 class LabelSmoothingLoss(nn.Module):
     def __init__(
-        self,
-        smoothing: Optional[float] = 0.0,
-        ignore_index: Optional[int] = 0,
-        reduction: Optional[str] = "mean"
+        self, smoothing: Optional[float] = 0.0, ignore_index: Optional[int] = 0, reduction: Optional[str] = "mean"
     ) -> None:
         """
         ignore index must be equivalent to padding id
