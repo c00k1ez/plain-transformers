@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .initializations import normal_initialization
+from .initializations import initialize_weights, normal_initialization

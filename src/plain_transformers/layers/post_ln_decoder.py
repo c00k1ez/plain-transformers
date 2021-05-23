@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .common_layers import FFN, MultiHeadAttention, TransformerDecoder, TransformerEmbedding
+from .common_layers import FFN, BaseTransformerDecoder, MultiHeadAttention, TransformerEmbedding
 from .utils import create_attention_mask
 
 
@@ -32,6 +32,7 @@ class PostLNDecoderLayer(nn.Module):
         activation_name: Optional[str] = "gelu",
         ln_eps: Optional[float] = 1e-12,
         context_len: Optional[int] = 512,
+        use_attention_merge_matrix: Optional[bool] = True,
     ) -> None:
         super(PostLNDecoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(
@@ -40,11 +41,21 @@ class PostLNDecoderLayer(nn.Module):
             dropout=dropout,
             context_len=context_len,
         )
-        self.self_attn_merge_matrix = nn.Linear(d_model, d_model)
+        if use_attention_merge_matrix:
+            self.self_attn_merge_matrix = nn.Linear(d_model, d_model)
+        else:
+            self.self_attn_merge_matrix = nn.Identity()
+            self.self_attn_merge_matrix.register_parameter("weight", None)
+            self.self_attn_merge_matrix.register_parameter("bias", None)
         self.post_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
         self.cross_attention = MultiHeadAttention(d_model=d_model, n_heads=n_heads, dropout=dropout)
-        self.cross_attn_merge_matrix = nn.Linear(d_model, d_model)
+        if use_attention_merge_matrix:
+            self.cross_attn_merge_matrix = nn.Linear(d_model, d_model)
+        else:
+            self.cross_attn_merge_matrix = nn.Identity()
+            self.cross_attn_merge_matrix.register_parameter("weight", None)
+            self.cross_attn_merge_matrix.register_parameter("bias", None)
         self.post_cross_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
         self.ffn = FFN(
@@ -105,85 +116,6 @@ class PostLNDecoderLayer(nn.Module):
         return output
 
 
-class PostLNTransformerDecoder(nn.Module):
-    def __init__(
-        self,
-        d_model: int,
-        vocab_size: int,
-        max_length: int,
-        pad_token_id: int,
-        token_type_vocab_size: int,
-        n_heads: int,
-        dim_feedforward: int,
-        num_layers: int,
-        dropout: Optional[float] = 0.1,
-        use_embedding_layer_norm: Optional[bool] = False,
-        pos_embedding_type: Optional[str] = "embedding",
-        activation_name: Optional[str] = "gelu",
-        ln_eps: Optional[float] = 1e-12,
-        layerdrop_threshold: Optional[float] = 0.0,
-    ) -> None:
-        super(PostLNTransformerDecoder, self).__init__()
-        self.embedding = TransformerEmbedding(
-            vocab_size=vocab_size,
-            d_model=d_model,
-            max_length=max_length,
-            pad_token_id=pad_token_id,
-            token_type_vocab_size=token_type_vocab_size,
-            dropout=dropout,
-            use_layer_norm=use_embedding_layer_norm,
-            ln_eps=ln_eps,
-            pos_embedding_type=pos_embedding_type,
-        )
-
-        self.decoder = TransformerDecoder(
-            num_layers=num_layers,
-            decoder_class=PostLNDecoderLayer,
-            d_model=d_model,
-            n_heads=n_heads,
-            dim_feedforward=dim_feedforward,
-            dropout=dropout,
-            activation_name=activation_name,
-            ln_eps=ln_eps,
-            context_len=max_length,
-            layerdrop_threshold=layerdrop_threshold,
-        )
-
-    def forward(
-        self,
-        input_ids: torch.Tensor,
-        encoder_hidden_state: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
-        get_attention_scores: Optional[bool] = False,
-    ) -> Union[Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]:
-
-        attention_mask = create_attention_mask(
-            attention_mask=attention_mask,
-            input_shape=input_ids.shape,
-            device=input_ids.device,
-        )
-
-        encoder_attention_mask = create_attention_mask(
-            attention_mask=encoder_attention_mask,
-            input_shape=encoder_hidden_state["key"].shape[:-1],
-            device=encoder_hidden_state["key"].device,
-            src_size=input_ids.shape[-1],
-        )
-
-        embeddings = self.embedding(input_ids)
-
-        hidden = self.decoder(
-            hidden=embeddings,
-            encoder_hidden_state=encoder_hidden_state,
-            attention_mask=attention_mask,
-            encoder_attention_mask=encoder_attention_mask,
-            get_attention_scores=get_attention_scores,
-        )
-
-        return hidden
-
-
 class PostLNMultimodalDecoderLayer(nn.Module):
     def __init__(
         self,
@@ -194,6 +126,7 @@ class PostLNMultimodalDecoderLayer(nn.Module):
         activation_name: Optional[str] = "gelu",
         ln_eps: Optional[float] = 1e-12,
         context_len: Optional[int] = 512,
+        use_attention_merge_matrix: Optional[bool] = True,
     ) -> None:
         super(PostLNMultimodalDecoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(
@@ -202,15 +135,31 @@ class PostLNMultimodalDecoderLayer(nn.Module):
             dropout=dropout,
             context_len=context_len,
         )
-        self.self_attn_merge_matrix = nn.Linear(d_model, d_model)
+        if use_attention_merge_matrix:
+            self.self_attn_merge_matrix = nn.Linear(d_model, d_model)
+        else:
+            self.self_attn_merge_matrix = nn.Identity()
+            self.self_attn_merge_matrix.register_parameter("weight", None)
+            self.self_attn_merge_matrix.register_parameter("bias", None)
+
         self.post_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
         self.first_cross_attention = MultiHeadAttention(d_model=d_model, n_heads=n_heads, dropout=dropout)
-        self.first_cross_attn_merge_matrix = nn.Linear(d_model, d_model)
+        if use_attention_merge_matrix:
+            self.first_cross_attn_merge_matrix = nn.Linear(d_model, d_model)
+        else:
+            self.first_cross_attn_merge_matrix = nn.Identity()
+            self.first_cross_attn_merge_matrix.register_parameter("weight", None)
+            self.first_cross_attn_merge_matrix.register_parameter("bias", None)
         self.first_post_cross_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
         self.second_cross_attention = MultiHeadAttention(d_model=d_model, n_heads=n_heads, dropout=dropout)
-        self.second_cross_attn_merge_matrix = nn.Linear(d_model, d_model)
+        if use_attention_merge_matrix:
+            self.second_cross_attn_merge_matrix = nn.Linear(d_model, d_model)
+        else:
+            self.second_cross_attn_merge_matrix = nn.Identity()
+            self.second_cross_attn_merge_matrix.register_parameter("weight", None)
+            self.second_cross_attn_merge_matrix.register_parameter("bias", None)
         self.second_post_cross_attn_ln = nn.LayerNorm(d_model, eps=ln_eps)
 
         self.ffn = FFN(
@@ -325,7 +274,7 @@ class PostLNMultimodalTransformerDecoder(nn.Module):
             pos_embedding_type=pos_embedding_type,
         )
 
-        self.decoder = TransformerDecoder(
+        self.decoder = BaseTransformerDecoder(
             num_layers=num_layers,
             decoder_class=PostLNMultimodalDecoderLayer,
             d_model=d_model,

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-__version__ = "0.0.1.5rc2"
+__version__ = "0.0.1.5rc3"
 
 
 from .yttm_tokenizer import BPEWrapper

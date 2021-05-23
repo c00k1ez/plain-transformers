@@ -12,10 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+from functools import partial
+from typing import Callable, Optional
 
 import torch
 import torch.nn as nn
+
+
+def initialize_weights(
+    model: nn.Module,
+    initialization_function: Callable,
+    pre_initialization: Optional[Callable] = None,
+    is_admin=False,
+    **kwargs,
+) -> None:
+    pre_init_outputs = {}
+    if pre_initialization is not None:
+        pre_init_outputs = pre_initialization(model)  # must be dict
+    initialization_function_with_args = partial(initialization_function, **kwargs, **pre_init_outputs)
+    model.apply(initialization_function_with_args)
 
 
 def normal_initialization(module: nn.Module, init_range: Optional[float] = 0.02) -> None:
