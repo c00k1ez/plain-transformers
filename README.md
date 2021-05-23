@@ -23,8 +23,8 @@ Multimodal transformer example with two tokenizers:
 import torch
 
 from plain_transformers.models import MultimodalTransformer
-from plain_transformers.layers import PostLNMultimodalTransformerDecoder
-from plain_transformers.layers import PostLNTransformerEncoder
+from plain_transformers.layers import MultimodalTransformerDecoder
+from plain_transformers.layers import TransformerEncoder
 
 from plain_transformers import BPEWrapper
 from plain_transformers.initializations import normal_initialization, initialize_weights
@@ -55,6 +55,7 @@ cfg = {
         'first_encoder_n_heads': 8,
         'first_encoder_dim_feedforward': 2048,
         'first_encoder_num_layers': 3,
+        'first_encoder_type': 'post_ln'
     },
     'second_encoder': {
         'second_encoder_vocab_size': encoder_tokenizer.vocab_size(),
@@ -64,6 +65,7 @@ cfg = {
         'second_encoder_n_heads': 8,
         'second_encoder_dim_feedforward': 2048,
         'second_encoder_num_layers': 3,
+        'second_encoder_type': 'post_ln'
     },
     'decoder': {
         'decoder_max_length': 512,
@@ -73,15 +75,15 @@ cfg = {
         'decoder_n_heads': 8,
         'decoder_dim_feedforward': 2048,
         'decoder_num_layers': 3,
+        'decoder_type': 'post_ln'
     },
 }
 ```
 **Step four**: initialize model and apply weight initialisation (with default parameter ```std=0.02```);
 ```python
 model = MultimodalTransformer(
-    PostLNTransformerEncoder,
-    PostLNTransformerEncoder,
-    PostLNMultimodalTransformerDecoder,
+    TransformerEncoder,
+    MultimodalTransformerDecoder,
     cfg['d_model'],
     **cfg['first_encoder'],
     **cfg['second_encoder'],
