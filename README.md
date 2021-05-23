@@ -83,6 +83,7 @@ cfg = {
 ```python
 model = MultimodalTransformer(
     TransformerEncoder,
+    TransformerEncoder,
     MultimodalTransformerDecoder,
     cfg['d_model'],
     **cfg['first_encoder'],
