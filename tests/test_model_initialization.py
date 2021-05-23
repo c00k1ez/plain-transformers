@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 from src.plain_transformers.initializations import initialize_weights, normal_initialization
-from src.plain_transformers.layers import PostLNTransformerEncoder
+from src.plain_transformers.layers import TransformerEncoder
 
 
 def test_initialize_weights():
@@ -18,8 +18,8 @@ def test_initialize_weights():
         "dim_feedforward": 200,
         "num_layers": 1,
     }
-    model_one = PostLNTransformerEncoder(**model_config)
-    model_two = PostLNTransformerEncoder(**model_config)
+    model_one = TransformerEncoder(**model_config)
+    model_two = TransformerEncoder(**model_config)
 
     layer_shape = model_one.encoder.encoder_layers[0].ffn.layer_inc.bias.data.shape
     assert not torch.equal(model_one.encoder.encoder_layers[0].ffn.layer_inc.bias.data, torch.zeros(layer_shape))

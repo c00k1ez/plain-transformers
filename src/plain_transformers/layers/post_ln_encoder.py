@@ -30,7 +30,7 @@ class PostLNEncoderLayer(nn.Module):
         dropout: Optional[float] = 0.1,
         activation_name: Optional[str] = "gelu",
         ln_eps: Optional[float] = 1e-12,
-        use_attention_merge_matrix: Optional[bool] = True
+        use_attention_merge_matrix: Optional[bool] = True,
     ) -> None:
         super(PostLNEncoderLayer, self).__init__()
         self.self_attention = MultiHeadAttention(d_model, n_heads, dropout)

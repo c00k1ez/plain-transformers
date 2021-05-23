@@ -18,9 +18,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .common_layers import TransformerEmbedding, BaseTransformerEncoder
-from .pre_ln_encoder import PreLNEncoderLayer
+from .common_layers import BaseTransformerEncoder, TransformerEmbedding
 from .post_ln_encoder import PostLNEncoderLayer
+from .pre_ln_encoder import PreLNEncoderLayer
 from .utils import create_attention_mask
 
 
@@ -42,10 +42,10 @@ class TransformerEncoder(nn.Module):
         ln_eps: Optional[float] = 1e-12,
         layerdrop_threshold: Optional[float] = 0.0,
         use_attention_merge_matrix: Optional[bool] = True,
-        encoder_type: Optional[str] = 'post_ln'
+        encoder_type: Optional[str] = "post_ln",
     ) -> None:
         super(TransformerEncoder, self).__init__()
-        assert encoder_type in ['post_ln', 'pre_ln']
+        assert encoder_type in ["post_ln", "pre_ln"]
         self.encoder_type = encoder_type
         self.embedding = TransformerEmbedding(
             vocab_size=vocab_size,
@@ -59,7 +59,7 @@ class TransformerEncoder(nn.Module):
             ln_eps=ln_eps,
         )
         encoder_class = PostLNEncoderLayer
-        if encoder_type == 'pre_ln':
+        if encoder_type == "pre_ln":
             encoder_class = PreLNEncoderLayer
         self.encoder = BaseTransformerEncoder(
             num_layers=num_layers,
@@ -73,7 +73,7 @@ class TransformerEncoder(nn.Module):
             layerdrop_threshold=layerdrop_threshold,
             use_attention_merge_matrix=use_attention_merge_matrix,
         )
-        if encoder_type == 'pre_ln':
+        if encoder_type == "pre_ln":
             self.post_encoder_ln = nn.LayerNorm(d_model, eps=ln_eps)
         else:
             self.post_encoder_ln = nn.Identity()

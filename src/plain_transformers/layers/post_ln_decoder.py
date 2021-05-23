@@ -18,7 +18,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .common_layers import FFN, MultiHeadAttention, BaseTransformerDecoder, TransformerEmbedding
+from .common_layers import FFN, BaseTransformerDecoder, MultiHeadAttention, TransformerEmbedding
 from .utils import create_attention_mask
 
 

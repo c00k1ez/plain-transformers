@@ -19,8 +19,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .common_layers import BaseTransformerDecoder, TransformerEmbedding
-from .utils import create_attention_mask
 from .post_ln_decoder import PostLNDecoderLayer, PostLNMultimodalDecoderLayer
+from .utils import create_attention_mask
 
 
 # TODO: implement pre ln decoder
@@ -42,7 +42,7 @@ class TransformerDecoder(nn.Module):
         ln_eps: Optional[float] = 1e-12,
         layerdrop_threshold: Optional[float] = 0.0,
         use_attention_merge_matrix: Optional[bool] = True,
-        decoder_type: Optional[str] = 'post_ln',
+        decoder_type: Optional[str] = "post_ln",
     ) -> None:
         super(TransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
@@ -124,7 +124,7 @@ class MultimodalTransformerDecoder(nn.Module):
         ln_eps: Optional[float] = 1e-12,
         layerdrop_threshold: Optional[float] = 0.0,
         use_attention_merge_matrix: Optional[bool] = True,
-        decoder_type: Optional[str] = 'post_ln',
+        decoder_type: Optional[str] = "post_ln",
     ) -> None:
         super(MultimodalTransformerDecoder, self).__init__()
         self.embedding = TransformerEmbedding(
