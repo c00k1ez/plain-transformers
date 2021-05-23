@@ -157,7 +157,7 @@ class SinusoidalPositionalEmbedding(nn.Module):
         weight = torch.arange(self.context_len, dtype=torch.float).unsqueeze(1) * weight.unsqueeze(0)
         weight = torch.cat([torch.sin(weight), torch.cos(weight)], dim=1).view(self.context_len, -1)
         if embedding_dim % 2 == 1:
-            weight = torch.cat([self.weight, torch.zeros(self.context_len, 1)], dim=1)
+            weight = torch.cat([weight, torch.zeros(self.context_len, 1)], dim=1)
         self.weight = nn.Parameter(weight, requires_grad=False)
 
     def forward(
