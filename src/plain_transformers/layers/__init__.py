@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .common_layers import MultiHeadAttention, TransformerDecoder, TransformerEmbedding, TransformerEncoder
+from .common_layers import MultiHeadAttention, BaseTransformerDecoder, TransformerEmbedding, BaseTransformerEncoder
 from .post_ln_decoder import (
     PostLNDecoderLayer,
     PostLNMultimodalDecoderLayer,
     PostLNMultimodalTransformerDecoder,
     PostLNTransformerDecoder,
 )
-from .post_ln_encoder import PostLNEncoderLayer, PostLNTransformerEncoder
-from .pre_ln_encoder import PreLNEncoderLayer, PreLNTransformerEncoder
+from .post_ln_encoder import PostLNEncoderLayer
+from .pre_ln_encoder import PreLNEncoderLayer
+from .transformer_encoder import TransformerEncoder
+from .transformer_decoder import TransformerDecoder, MultimodalTransformerDecoder

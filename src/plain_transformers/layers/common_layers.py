@@ -214,7 +214,7 @@ class TransformerEmbedding(nn.Module):
         return token_emb
 
 
-class TransformerEncoder(nn.Module):
+class BaseTransformerEncoder(nn.Module):
     def __init__(
         self,
         num_layers: int,
@@ -222,7 +222,7 @@ class TransformerEncoder(nn.Module):
         layerdrop_threshold: Optional[float] = 0.0,
         **kwargs,
     ) -> None:
-        super(TransformerEncoder, self).__init__()
+        super(BaseTransformerEncoder, self).__init__()
         self.encoder_layers = nn.ModuleList([encoder_class(**kwargs) for _ in range(num_layers)])
         self.layerdrop_threshold = layerdrop_threshold
 
@@ -255,7 +255,7 @@ class TransformerEncoder(nn.Module):
         return output
 
 
-class TransformerDecoder(nn.Module):
+class BaseTransformerDecoder(nn.Module):
     def __init__(
         self,
         num_layers: int,
@@ -263,7 +263,7 @@ class TransformerDecoder(nn.Module):
         layerdrop_threshold: Optional[float] = 0.0,
         **kwargs,
     ) -> None:
-        super(TransformerDecoder, self).__init__()
+        super(BaseTransformerDecoder, self).__init__()
         self.decoder_layers = nn.ModuleList([decoder_class(**kwargs) for _ in range(num_layers)])
         self.layerdrop_threshold = layerdrop_threshold
 
