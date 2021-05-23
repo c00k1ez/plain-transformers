@@ -17,7 +17,6 @@ from .post_ln_decoder import (
     PostLNDecoderLayer,
     PostLNMultimodalDecoderLayer,
     PostLNMultimodalTransformerDecoder,
-    PostLNTransformerDecoder,
 )
 from .post_ln_encoder import PostLNEncoderLayer
 from .pre_ln_encoder import PreLNEncoderLayer
