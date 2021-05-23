@@ -9,7 +9,7 @@
 * Unlikelihood loss (sentence-level and for full context), [arxiv](https://arxiv.org/abs/1908.04319);
 * LayerDrop technique for transformer encoder/decoder layers, [arxiv](https://arxiv.org/abs/1909.11556);
 * Pre/Post LayerNorm encoders (Decoders in process), [arxiv](https://arxiv.org/abs/2004.08249);
-* ADMIN Initialization (in process), [arxiv](https://arxiv.org/abs/2004.08249);
+* ADMIN Initialization (in future), [arxiv](https://arxiv.org/abs/2004.08249);
 * Top-k/Top-p sampling with temperature, [arxiv](https://arxiv.org/abs/1904.09751);
 
 ## Installation
