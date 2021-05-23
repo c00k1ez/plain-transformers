@@ -27,7 +27,7 @@ from plain_transformers.layers import PostLNMultimodalTransformerDecoder
 from plain_transformers.layers import PostLNTransformerEncoder
 
 from plain_transformers import BPEWrapper
-from plain_transformers.initializations import normal_initialization
+from plain_transformers.initializations import normal_initialization, initialize_weights
 from plain_transformers.samplers.nucleus_sampler import NucleusSampler
 
 import youtokentome as yttm
@@ -91,7 +91,7 @@ model = MultimodalTransformer(
     share_encoder_embeddings=True,
 )
 
-model.apply(normal_initialization)
+initialize_weights(model, normal_initialization, init_range=0.02)
 ```
 **Step five**: train our model like ordinary seq2seq;
 ```python
