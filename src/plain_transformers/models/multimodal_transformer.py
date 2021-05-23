@@ -55,18 +55,21 @@ class MultimodalTransformer(nn.Module):
         decoder_ln_eps: Optional[float] = 1e-12,
         decoder_dropout: Optional[float] = 0.1,
         decoder_layerdrop_threshold: Optional[float] = 0.0,
+        decoder_type: Optional[str] = 'post_ln',
         first_encoder_dropout: Optional[float] = 0.1,
         first_encoder_use_embedding_layer_norm: Optional[bool] = True,
         first_encoder_pos_embedding_type: Optional[str] = "embedding",
         first_encoder_activation_name: Optional[str] = "gelu",
         first_encoder_ln_eps: Optional[float] = 1e-12,
         first_encoder_layerdrop_threshold: Optional[float] = 0.0,
+        first_encoder_type: Optional[str] = 'post_ln',
         second_encoder_dropout: Optional[float] = 0.1,
         second_encoder_use_embedding_layer_norm: Optional[bool] = True,
         second_encoder_pos_embedding_type: Optional[str] = "embedding",
         second_encoder_activation_name: Optional[str] = "gelu",
         second_encoder_ln_eps: Optional[float] = 1e-12,
         second_encoder_layerdrop_threshold: Optional[float] = 0.0,
+        second_encoder_type: Optional[str] = 'post_ln',
         share_decoder_head_weights: Optional[bool] = True,
         share_encoder_decoder_embeddings: Optional[bool] = False,
         share_encoder_embeddings: Optional[bool] = False,
@@ -88,6 +91,7 @@ class MultimodalTransformer(nn.Module):
             ln_eps=first_encoder_ln_eps,
             vocab_size=first_encoder_vocab_size,
             layerdrop_threshold=first_encoder_layerdrop_threshold,
+            encoder_type=first_encoder_type,
         )
         self.second_encoder = second_encoder_class(
             d_model=d_model,
@@ -104,6 +108,7 @@ class MultimodalTransformer(nn.Module):
             ln_eps=second_encoder_ln_eps,
             vocab_size=second_encoder_vocab_size,
             layerdrop_threshold=second_encoder_layerdrop_threshold,
+            encoder_type=second_encoder_type,
         )
 
         self.decoder = decoder_class(
@@ -121,6 +126,7 @@ class MultimodalTransformer(nn.Module):
             activation_name=decoder_activation_name,
             ln_eps=decoder_ln_eps,
             layerdrop_threshold=decoder_layerdrop_threshold,
+            decoder_type=decoder_type,
         )
         self.lm_head = nn.Linear(d_model, decoder_vocab_size, bias=False)
         if share_decoder_head_weights:
