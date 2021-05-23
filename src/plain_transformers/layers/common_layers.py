@@ -14,6 +14,7 @@
 
 import random
 from typing import Callable, Optional, Tuple, Union
+import math
 
 import torch
 import torch.nn as nn
@@ -142,6 +143,35 @@ class MultiHeadAttention(nn.Module):
         return output
 
 
+class SinusoidalPositionalEmbedding(nn.Module):
+    # based on implenemtation from fairseq
+    def __init__(self, context_len: int, embedding_dim: int):
+        super(SinusoidalPositionalEmbedding, self).__init__()
+        # im not shure about +1 operation
+        self.context_len = context_len + 1
+        self.embedding_dim = embedding_dim
+
+        half_dim = embedding_dim // 2
+        weight = math.log(10000) / (half_dim - 1)
+        weight = torch.exp(torch.arange(half_dim, dtype=torch.float) * -weight)
+        weight = torch.arange(self.context_len, dtype=torch.float).unsqueeze(1) * weight.unsqueeze(0)
+        weight = torch.cat([torch.sin(weight), torch.cos(weight)], dim=1).view(self.context_len, -1)
+        if embedding_dim % 2 == 1:
+            weight = torch.cat([self.weight, torch.zeros(self.context_len, 1)], dim=1)
+        self.weight = nn.Parameter(weight, requires_grad=False)
+
+    def forward(
+        self,
+        input_positions: torch.Tensor,
+    ) -> torch.Tensor:
+        batch_size, seq_len = input_positions.shape
+        # im not shure about +1 operation
+        # TODO: find more information about it
+        input_positions = input_positions + 1
+        inds = self.weight.index_select(0, input_positions.view(-1)).view(batch_size, seq_len, -1).detach()
+        return inds
+
+
 class TransformerEmbedding(nn.Module):
     def __init__(
         self,
@@ -164,12 +194,14 @@ class TransformerEmbedding(nn.Module):
             use_token_type_embeddings = False
         else:
             use_token_type_embeddings = True
-        assert pos_embedding_type in [
-            "embedding",
-        ]  # "timing"]
-        # TODO: implement timing signal
+        assert pos_embedding_type in ["embedding", "timing"]
+
         self.token_embedding = nn.Embedding(vocab_size, d_model, pad_token_id)
-        self.positional_embedding = nn.Embedding(max_length, d_model)
+
+        if pos_embedding_type == "embedding":
+            self.positional_embedding = nn.Embedding(max_length, d_model)
+        else:
+            self.positional_embedding = SinusoidalPositionalEmbedding(max_length, d_model)
         if use_token_type_embeddings:
             self.token_type_embedding = nn.Embedding(token_type_vocab_size, d_model)
         else:
