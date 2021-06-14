@@ -39,7 +39,7 @@ def normal_initialization(module: nn.Module, init_range: Optional[float] = 0.02)
         if isinstance(module, nn.Linear):
             if module.bias is not None:
                 module.bias.data.zero_()
-        elif isinstance(module, nn.LayerNorm):
-            if module.bias is not None:
-                module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
+    elif isinstance(module, nn.LayerNorm):
+        if module.bias is not None:
+            module.bias.data.zero_()
+        module.weight.data.fill_(1.0)
