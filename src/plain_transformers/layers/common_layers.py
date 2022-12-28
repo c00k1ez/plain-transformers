@@ -61,7 +61,7 @@ class MultiHeadAttention(nn.Module):
         self.d_model = d_model
         self.n_heads = n_heads
         self.hidden_per_head = d_model // n_heads
-        self.scale = self.hidden_per_head ** 0.5
+        self.scale = self.hidden_per_head**0.5
         self.query_input_dim = d_model if query_input_dim is None else query_input_dim
         self.key_input_dim = d_model if key_input_dim is None else key_input_dim
         self.value_input_dim = d_model if value_input_dim is None else value_input_dim
