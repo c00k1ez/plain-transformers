@@ -70,4 +70,4 @@ jobs:
     - name: Run Flake8
       run: flake8 . --config setup.cfg
     - name: Run isort
-      run: isort . -sp setup.cfg --recursive --check-only -s tests/
+      run: isort . --sp setup.cfg --check-only -s tests/
