@@ -41,12 +41,8 @@ jobs:
       run: pip install Cython
     - name: Install dependencies
       run: pip install .
-    - name: Install linters
-      run: pip install flake8==6.0.0
     - name: Run PyTest
       run: make tests
-    - name: Run Flake8
-      run: flake8 .
   
   check_formatting:
     name: Check code formatting with Black, Flake8, isort
