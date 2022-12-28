@@ -37,6 +37,8 @@ jobs:
     - name: Install PyTorch on MacOS
       if: matrix.os == 'macos-latest'
       run: pip install torch==1.8.0
+    - name: install Cython
+      run: pip install Cython
     - name: Install dependencies
       run: pip install .
     - name: Install linters
